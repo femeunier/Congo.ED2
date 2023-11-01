@@ -139,8 +139,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     mutate(id = 1:n())
 
   cccdf <- ccdf %>%
-    dplyr::select(-c(time,
-                     model,Continent,model.lat.lon,
+    dplyr::select(-c(time,Continent,model.lat.lon,
                      gpp,npp,nep,ra,rh))
 
   selected <- cccdf %>%
