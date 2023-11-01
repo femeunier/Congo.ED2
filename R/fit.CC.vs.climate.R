@@ -164,7 +164,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
     op.file <- paste0("../",
                       xgb.model.prefix,".",model,".",cvar,".RDS")
-    if (file.exists(op.file) & !overwrite) next()
+    if (file.exists(op.file) & !as.logical(overwrite)) next()
 
     if (nrow(all.data) == 0) next()
 
