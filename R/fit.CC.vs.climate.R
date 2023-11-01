@@ -11,11 +11,11 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   biomes <- readRDS("/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS") %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
-  grid.file <- paste0("./data/grid.",model,".RDS")
-  model.file <- paste0("./outputs/Trendy.",model,".",scenario,".CC.pantropical.v11.RDS")
+  grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R//data/grid.",model,".RDS")
+  model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R//outputs/Trendy.",model,".",scenario,".CC.pantropical.v11.RDS")
 
   if (scenario == "S3"){
-    grid.file.transition <- paste0("./data/grid.",model,".transitions.RDS")
+    grid.file.transition <- paste0("/data/gent/vo/000/gvo00074/felicien/R//data/grid.",model,".transitions.RDS")
     all.files <- c(model.file,grid.file,grid.file.transition)
   } else {
     all.files <- c(model.file,grid.file)
@@ -54,7 +54,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
            lon = round(lon,digits = 2))
 
   # CO2
-  dataC02 <- read.table("./data/CO2_1700_2019_TRENDYv2020.txt",
+  dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/CO2_1700_2019_TRENDYv2020.txt",
                         stringsAsFactors = FALSE) %>%
     mutate(year = as.numeric(str_sub(V1,7,10)),
            CO2 = as.numeric(str_sub(V1,12,17))) %>%
@@ -162,7 +162,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       filter(!all(get(cvar) == 0)) %>%
       ungroup()
 
-    op.file <- paste0("./outputs/",
+    op.file <- paste0("../",
                       xgb.model.prefix,".",model,".",cvar,".RDS")
     if (file.exists(op.file) & !overwrite) next()
 
