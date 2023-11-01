@@ -29,7 +29,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   all.models <- readRDS(model.file) %>%
     dplyr::select(-starts_with("time.unit"))
 
-  all.grids <-  readRDS(grid.file)
+  all.grids <- readRDS(grid.file)
 
   if (scenario == "S3"){
     all.grids.transitions <- readRDS(grid.file.transition) %>%
@@ -74,9 +74,10 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
     sink.vs.climate <- modelled.sink %>%
       left_join(all.grids %>%
+                  dplyr::select(-starts_with("model")) %>%
                   mutate(lat = round(lat,digits = 2),
                          lon = round(lon,digits = 2)),
-                by = c("model","year","lat","lon","month")) %>%
+                by = c("year","lat","lon","month")) %>%
       left_join(dataC02.all,
                 by = c("year","month")) %>%
       ungroup()
@@ -84,6 +85,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
     sink.vs.climate <- modelled.sink %>%
       left_join(all.grids %>%
+                  dplyr::select(-starts_with("model")) %>%
                   mutate(lat = round(lat,digits = 2),
                          lon = round(lon,digits = 2)),
                 by = c("model","year","lat","lon","month")) %>%
@@ -209,5 +211,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
     }
   }
+
+  return(TRUE)
 }
 
