@@ -132,12 +132,9 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
            npp = npp*86400*365,
            nep = nep*86400*365)
 
-  cdf <- sink.vs.climate %>%
-    filter(model == cmodel) %>%
-    mutate(model.lat.lon = paste0(model,".",lat,".",lon))
-
-  ccdf <- cdf %>%
+  ccdf <- sink.vs.climate %>%
     ungroup() %>%
+    mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
     filter(model.lat.lon %in% TF[["model.lat.lon"]]) %>%
     mutate(id = 1:n())
 
@@ -167,7 +164,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       ungroup()
 
     op.file <- paste0("./outputs/",
-                      xgb.model.prefix,".",cmodel,".",cvar,".RDS")
+                      xgb.model.prefix,".",model,".",cvar,".RDS")
     if (file.exists(op.file) & !overwrite) next()
 
     if (nrow(all.data) == 0) next()
