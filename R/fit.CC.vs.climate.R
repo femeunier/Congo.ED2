@@ -144,7 +144,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
   selected <- cccdf %>%
     filter(year %in% sample(unique(year),
-                            frac.train*length(unique(year)),
+                            as.numeric(frac.train)*length(unique(year)),
                             replace = FALSE)) %>%
     pull(id) %>%
     sort()
