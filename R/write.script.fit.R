@@ -17,7 +17,7 @@ write.script.fit <- function(file = "script.R",
         file=file,append=TRUE)
   write(paste0("scenario <- \"",scenario,"\""),
         file=file,append=TRUE)
-  write(paste0("vars <- \"",vars,"\""),
+  write(paste0("vars <- c('",paste0(vars,collapse = "', '"),"')"),
         file=file,append=TRUE)
   write(paste0("biome.names <- \"",biome.names,"\""),
         file=file,append=TRUE)
