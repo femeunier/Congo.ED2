@@ -8,7 +8,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               frac.train = 0.7,
                               overwrite = TRUE){
 
-  biomes <- readRDS("./outputs/biome.CRUJRA.1901.2019.RDS") %>%
+  biomes <- readRDS("/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS") %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
   grid.file <- paste0("./data/grid.",model,".RDS")
