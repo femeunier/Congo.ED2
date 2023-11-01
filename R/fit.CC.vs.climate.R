@@ -23,7 +23,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
   if (!all(file.exists(all.files))){
     stop(paste("Not all files exist, check:",
-               all.files[which(!file.exist(all.files))]))
+               all.files[which(!file.exists(all.files))]))
   }
 
   all.models <- readRDS(model.file) %>%
