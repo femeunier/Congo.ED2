@@ -132,84 +132,79 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
            npp = npp*86400*365,
            nep = nep*86400*365)
 
-  for (cmodel in models){
+  cdf <- sink.vs.climate %>%
+    filter(model == cmodel) %>%
+    mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
-    print(cmodel)
+  ccdf <- cdf %>%
+    ungroup() %>%
+    filter(model.lat.lon %in% TF[["model.lat.lon"]]) %>%
+    mutate(id = 1:n())
 
-    cdf <- sink.vs.climate %>%
-      filter(model == cmodel) %>%
-      mutate(model.lat.lon = paste0(model,".",lat,".",lon))
+  cccdf <- ccdf %>%
+    dplyr::select(-c(time,
+                     model,Continent,model.lat.lon,
+                     gpp,npp,nep,ra,rh))
 
-    ccdf <- cdf %>%
-      ungroup() %>%
-      filter(model.lat.lon %in% TF[["model.lat.lon"]]) %>%
-      mutate(id = 1:n())
+  selected <- cccdf %>%
+    filter(year %in% sample(unique(year),
+                            frac.train*length(unique(year)),
+                            replace = FALSE)) %>%
+    pull(id) %>%
+    sort()
 
-    cccdf <- ccdf %>%
-      dplyr::select(-c(time,
-                       model,Continent,model.lat.lon,
-                       gpp,npp,nep,ra,rh))
+  for (cvar in vars){
 
-    selected <- cccdf %>%
-      filter(year %in% sample(unique(year),
-                              frac.train*length(unique(year)),
-                              replace = FALSE)) %>%
-      pull(id) %>%
-      sort()
+    print(paste0("- ",cvar))
 
-    for (cvar in vars){
+    all.data <- cbind(cccdf %>%
+                        dplyr::select(-c(id)),
+                      ccdf %>%
+                        dplyr::select(!!cvar)) %>%
+      na.omit() %>%
+      group_by(lat,lon) %>%
+      filter(!all(get(cvar) == 0)) %>%
+      ungroup()
 
-      print(paste0("- ",cvar))
+    op.file <- paste0("./outputs/",
+                      xgb.model.prefix,".",cmodel,".",cvar,".RDS")
+    if (file.exists(op.file) & !overwrite) next()
 
-      all.data <- cbind(cccdf %>%
-                          dplyr::select(-c(id)),
-                        ccdf %>%
-                          dplyr::select(!!cvar)) %>%
-        na.omit() %>%
-        group_by(lat,lon) %>%
-        filter(!all(get(cvar) == 0)) %>%
-        ungroup()
+    if (nrow(all.data) == 0) next()
 
-      op.file <- paste0("./outputs/",
-                        xgb.model.prefix,".",cmodel,".",cvar,".RDS")
-      if (file.exists(op.file) & !overwrite) next()
+    train <- cccdf %>%
+      filter(id %in% selected)
+    test <- cccdf %>%
+      filter(!(id %in% selected))
 
-      if (nrow(all.data) == 0) next()
+    data <- as.matrix(train %>%
+                        dplyr::select(-id))
+    label <- ccdf %>%
+      filter(id %in% selected) %>%
+      pull(!!cvar)
 
-      train <- cccdf %>%
-        filter(id %in% selected)
-      test <- cccdf %>%
-        filter(!(id %in% selected))
+    test.data <- as.matrix(test %>%
+                             dplyr::select(-id))
+    test.label <- ccdf %>%
+      filter(!(id %in% selected)) %>%
+      pull(!!cvar)
 
-      data <- as.matrix(train %>%
-                          dplyr::select(-id))
-      label <- ccdf %>%
-        filter(id %in% selected) %>%
-        pull(!!cvar)
+    xgb_model <- caret::train(
+      data,label,
+      trControl = xgb_trcontrol,
+      tuneGrid = xgb_grid,
+      method = "xgbTree",
+      nthread = 16,
+      verbosity = 1)
 
-      test.data <- as.matrix(test %>%
-                               dplyr::select(-id))
-      test.label <- ccdf %>%
-        filter(!(id %in% selected)) %>%
-        pull(!!cvar)
+    xgb_model$trainingData <- data
+    xgb_model$labels <- label
+    xgb_model$test.data <- test.data
+    xgb_model$test.labels <- test.label
 
-      xgb_model <- caret::train(
-        data,label,
-        trControl = xgb_trcontrol,
-        tuneGrid = xgb_grid,
-        method = "xgbTree",
-        nthread = 16,
-        verbosity = 1)
+    saveRDS(xgb_model,
+            op.file)
 
-      xgb_model$trainingData <- data
-      xgb_model$labels <- label
-      xgb_model$test.data <- test.data
-      xgb_model$test.labels <- test.label
-
-      saveRDS(xgb_model,
-              op.file)
-
-    }
   }
 
   return(TRUE)
