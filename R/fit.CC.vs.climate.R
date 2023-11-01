@@ -2,7 +2,7 @@
 fit.CC.vs.climate <- function(model = "CABLE-POP",
                               scenario = "S2",
                               vars = c("gpp","npp","nep","ra","rh"),
-                              biomes = c("Tropical seasonal forest/savanna"),
+                              biome.names = c("Tropical seasonal forest/savanna"),
                               continents = c("Africa"),
                               xgb.model.prefix = "xgb.model",
                               frac.train = 0.7,
@@ -102,7 +102,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   }
 
   TF <- biomes %>%
-    filter(biome %in% biomes) %>%
+    filter(biome %in% biome.names) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
 
