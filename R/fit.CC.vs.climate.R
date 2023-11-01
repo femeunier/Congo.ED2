@@ -163,7 +163,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       ungroup()
 
     op.file <- paste0("../",
-                      xgb.model.prefix,".",model,".",cvar,".RDS")
+                      xgb.model.prefix,".",cvar,".RDS")
     if (file.exists(op.file) & !as.logical(overwrite)) next()
 
     if (nrow(all.data) == 0) next()
