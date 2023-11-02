@@ -40,7 +40,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   CC.Trendy <- all.models %>%
     mutate(continent = Congo.ED2::coord2continent(lon,lon)) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
-    filter(Continent %in% continents)
+    filter(continent %in% continents)
 
   # Merge
 
@@ -135,7 +135,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     mutate(id = 1:n())
 
   cccdf <- ccdf %>%
-    dplyr::select(-c(time,Continent,model.lat.lon,
+    dplyr::select(-c(time,continent,model.lat.lon,
                      gpp,npp,nep,ra,rh))
 
   selected <- cccdf %>%
