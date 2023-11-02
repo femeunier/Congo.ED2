@@ -6,9 +6,10 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               continents = c("Africa"),
                               xgb.model.prefix = "xgb.model",
                               frac.train = 0.7,
+                              biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS",
                               overwrite = TRUE){
 
-  biomes <- readRDS("/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS") %>%
+  biomes <- readRDS(biome.file) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
   grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,".RDS")
@@ -37,12 +38,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   }
 
   CC.Trendy <- all.models %>%
-    mutate(Continent = case_when(lon <= -20 & lon >= -85 ~ "Amazon",
-                                 lon > -20 & lon <= 55 ~ "Africa",
-                                 lon > 90 & lon < 175 & lat > - 10 ~ "Asia",
-                                 lon > 100 & lon < 175 & lat <= -10 ~ "Australia")) %>%
-    mutate(Continent = factor(Continent,
-                              levels = c("Amazon","Africa","Asia","Australia"))) %>%
+    mutate(continent = Congo.ED2::coord2continent(lon,lon)) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
     filter(Continent %in% continents)
 
