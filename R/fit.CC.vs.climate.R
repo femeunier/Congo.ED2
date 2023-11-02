@@ -87,6 +87,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                 by = c("year","lat","lon","month")) %>%
 
       left_join(all.grids.transitions %>%
+                  dplyr::select(-starts_with("model")) %>%
                   mutate(lat = round(lat,digits = 2),
                          lon = round(lon,digits = 2)),
                 by = c("year","lat","lon")) %>%
