@@ -84,12 +84,12 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                   dplyr::select(-starts_with("model")) %>%
                   mutate(lat = round(lat,digits = 2),
                          lon = round(lon,digits = 2)),
-                by = c("model","year","lat","lon","month")) %>%
+                by = c("year","lat","lon","month")) %>%
 
       left_join(all.grids.transitions %>%
                   mutate(lat = round(lat,digits = 2),
                          lon = round(lon,digits = 2)),
-                by = c("model","year","lat","lon")) %>%
+                by = c("year","lat","lon")) %>%
 
       left_join(dataC02.all,
                 by = c("year","month")) %>%
@@ -100,7 +100,6 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   TF <- biomes %>%
     filter(biome %in% biome.names) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
-
 
   xgb_trcontrol <- caret::trainControl(
     method = "cv",
