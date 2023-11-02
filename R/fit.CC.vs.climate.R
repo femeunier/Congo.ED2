@@ -99,6 +99,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   }
 
   TF <- biomes %>%
+    mutate(lat = round(lat,digits = 2),
+           lon = round(lon,digits = 2)) %>%
     filter(biome %in% biome.names) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
