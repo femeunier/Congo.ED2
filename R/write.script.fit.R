@@ -7,7 +7,8 @@ write.script.fit <- function(file = "script.R",
                              xgb.model.prefix = "xgb.model",
                              frac.train = 0.7,
                              biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS",
-                             overwrite = TRUE){
+                             overwrite = TRUE,
+                             transition.suffix = NULL){
 
   writeLines("rm(list = ls())",con = file)
   write("",file=file,append=TRUE)
@@ -33,8 +34,15 @@ write.script.fit <- function(file = "script.R",
   write(paste0("overwrite <- \"",overwrite,"\""),
         file=file,append=TRUE)
 
+  if (!is.null(transition.suffix)){
+    write(paste0("transition.suffix <- \"",transition.suffix,"\""),
+          file=file,append=TRUE)
+  }
+
   write("",file=file,append=TRUE)
 
   write("fit.CC.vs.climate(model,scenario,
-        vars,biome.names,continents,xgb.model.prefix,frac.train,biome.file,overwrite)",file=file,append=TRUE)
+        vars,biome.names,continents,xgb.model.prefix,
+        frac.train,biome.file,overwrite,transition.suffix)",
+        file=file,append=TRUE)
 }
