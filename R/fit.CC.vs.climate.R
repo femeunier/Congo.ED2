@@ -138,7 +138,13 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
   cccdf <- ccdf %>%
     dplyr::select(-c(time,continent,model.lat.lon,
-                     gpp,npp,nep,ra,rh))
+                     gpp,npp,nep,ra,rh)) %>%
+    dplyr::select(
+      where(
+        ~!all((.x == mean(.x,na.rm = TRUE)))
+      )
+    ) # remove constant columns (full of 0 for instance)
+
 
   selected <- cccdf %>%
     filter(year %in% sample(unique(year),
