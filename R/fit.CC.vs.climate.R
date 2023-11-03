@@ -7,7 +7,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               xgb.model.prefix = "xgb.model",
                               frac.train = 0.7,
                               biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS",
-                              overwrite = TRUE){
+                              overwrite = TRUE,
+                              transition.suffix = "transitions"){
 
   biomes <- readRDS(biome.file) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
@@ -16,7 +17,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",model,".",scenario,".CC.pantropical.v11.RDS")
 
   if (scenario == "S3"){
-    grid.file.transition <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,".transitions.RDS")
+    grid.file.transition <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,".",transition.suffix,".RDS")
     all.files <- c(model.file,grid.file,grid.file.transition)
   } else {
     all.files <- c(model.file,grid.file)
