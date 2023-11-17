@@ -161,7 +161,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       c("train", "validation", "test"),
       size = n(),
       replace = TRUE,
-      prob = c(frac.train,(1-frac.train)/2,(1-frac.train)/2))) %>%
+      prob = c(as.numeric(frac.train),(1-as.numeric(frac.train))/2,(1-as.numeric(frac.train))/2))) %>%
     ungroup()
 
 
