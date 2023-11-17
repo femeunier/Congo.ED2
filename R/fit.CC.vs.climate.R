@@ -5,7 +5,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               biome.names = c("Tropical seasonal forest/savanna"),
                               continents = c("Africa"),
                               xgb.model.prefix = "xgb.model",
-                              frac.train = 0.7,
+                              frac.train = 0.6,
                               biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS",
                               overwrite = TRUE,
                               transition.suffix = "transitions"){
@@ -147,12 +147,23 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     ) # remove constant columns (full of 0 for instance)
 
 
-  selected <- cccdf %>%
-    filter(year %in% sample(unique(year),
-                            as.numeric(frac.train)*length(unique(year)),
-                            replace = FALSE)) %>%
-    pull(id) %>%
-    sort()
+  # selected <- cccdf %>%
+  #   filter(year %in% sample(unique(year),
+  #                           as.numeric(frac.train)*length(unique(year)),
+  #                           replace = FALSE)) %>%
+  #   pull(id) %>%
+  #   sort()
+
+
+  cccdf <-  cccdf %>%
+    group_by(year) %>%
+    mutate(group = sample(
+      c("train", "validation", "test"),
+      size = n(),
+      replace = TRUE,
+      prob = c(frac.train,(1-frac.train)/2,(1-frac.train)/2))) %>%
+    ungroup()
+
 
   for (cvar in vars){
 
@@ -173,21 +184,38 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
     if (nrow(all.data) == 0) next()
 
-    train <- cccdf %>%
-      filter(id %in% selected)
-    test <- cccdf %>%
-      filter(!(id %in% selected))
 
+    train <- cccdf %>%
+      filter(group == "train") %>%
+      dplyr::select(-group)
+
+    validation <- cccdf %>%
+      filter(group == "validation") %>%
+      dplyr::select(-group)
+
+    test <- cccdf %>%
+      filter(group == "test") %>%
+      dplyr::select(-group)
+
+    # Training data
     data <- as.matrix(train %>%
                         dplyr::select(-id))
     label <- ccdf %>%
-      filter(id %in% selected) %>%
+      filter(id %in% (train[["id"]])) %>%
       pull(!!cvar)
 
+    # Validation data
+    validation.data <- as.matrix(validation %>%
+                                   dplyr::select(-id))
+    validation.label <- ccdf %>%
+      filter(id %in% (validation[["id"]])) %>%
+      pull(!!cvar)
+
+    # Test data
     test.data <- as.matrix(test %>%
                              dplyr::select(-id))
     test.label <- ccdf %>%
-      filter(!(id %in% selected)) %>%
+      filter(id %in% (test[["id"]])) %>%
       pull(!!cvar)
 
     xgb_model <- caret::train(
@@ -198,12 +226,28 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       nthread = 16,
       verbosity = 1)
 
-    xgb_model$trainingData <- data
-    xgb_model$labels <- label
-    xgb_model$test.data <- test.data
-    xgb_model$test.labels <- test.label
+    # We rerun with the best set of parameters, with test and validation data together
+    xgb_best_model <- caret::train(
+      x = rbind(data,
+                validation.data),
+      y = c(label,
+            validation.label),
+      trControl = xgb_trcontrol,
+      tuneGrid = xgb_model$bestTune,
+      method = "xgbTree",
+      nthread = 16,
+      verbosity = 1)
 
-    saveRDS(xgb_model,
+    xgb_best_model$training.data <- data
+    xgb_best_model$labels <- label
+
+    xgb_best_model$validation.data <- validation.data
+    xgb_best_model$validation.labels <- validation.label
+
+    xgb_best_model$test.data <- test.data
+    xgb_best_model$test.labels <- test.label
+
+    saveRDS(xgb_best_model,
             op.file)
 
   }
