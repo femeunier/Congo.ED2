@@ -6,13 +6,13 @@ library(ggplot2)
 library(reshape2)
 library(tidyr)
 
-ncfile <- "/home/femeunier/Documents/projects/Congo.ED2/data/transitions_crop.nc"
+ncfile <- "/home/femeunier/Documents/projects/Congo.ED2/data/transitions_tropics_20.nc"
 
 nc <- nc_open(ncfile)
 
 all.lats <- ncvar_get(nc,"lat")
 all.lons <- ncvar_get(nc,"lon")
-all.times <- ncvar_get(nc,"time")
+all.times <- ncvar_get(nc,"time") + 850
 
 # Example Yoko
 clat = 0.25 ; clon = 25.25
@@ -26,7 +26,7 @@ lon.pos <- which(all.lons == as.numeric(dist.df$lon))
 
 names.var <- names(nc$var)
 # names.var.selected <- names.var[grepl("primf_to*",names.var)]
-names.var.selected <- names.var[grepl("*_to_*",names.var)]
+names.var.selected <- names.var
 
 all.data <- data.frame(time = all.times)
 

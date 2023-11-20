@@ -10,6 +10,7 @@ library(YGB)
 library(randomForest)
 library(ggpointdensity)
 library(TrENDY.analyses)
+library(ggalt)
 
 Biomass.Trendy <- readRDS("/home/femeunier/Documents/projects/TrENDY.analyses/outputs/Trendy.pantropical.S2.cAGB.v11.RDS") %>%
   pivot_wider(names_from = "variable",
@@ -135,7 +136,8 @@ for (cmodel in unique(sink.vs.climate$model)){
                   ntree = 500,importance = TRUE)
 
   df.predict <- bind_rows(df.predict,
-                          data.frame(obs = ccdf$sink.m,
+                          data.frame(Continent = ccdf$Continent,
+                                     obs = ccdf$sink.m,
                                      predict.lm = as.vector(predict(LM)),
                                      predict.rf = as.vector(predict(rf))) %>%
                             mutate(model = cmodel))
@@ -180,14 +182,26 @@ ggplot(df.predict %>%
        aes(x = predict.rf,
            y = obs)) +
   geom_pointdensity() +
+  # geom_hex(bin = 100) +
+  # geom_point(shape=16, size=0.25, show.legend = FALSE) +
+  # stat_bkde2d(bandwidth=c(18036446, 0.05014539),
+  #             grid_size=c(128, 128), geom="polygon", aes(fill=..level..)) +
+
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
-  scale_color_viridis_c() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  scale_fill_viridis_c() +
+  # facet_wrap(~ Continent) +
   theme_bw()
 
-ggplot(data = df.predict) +
+ggplot(data = df.predict %>%
+         filter(!(grepl("LP",model)))) +
   geom_point(aes(x = predict.rf,
                  y = obs,
-                 color = model), size = 0.1) +
+                 color = model), size = 0.1, alpha = 0.5) +
+  geom_abline(slope = 1, intercept = 0, linetype = 2) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
   theme_bw()
 
 all.corr <- all.corr %>%
