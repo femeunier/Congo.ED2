@@ -5,6 +5,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               biome.names = c("Tropical seasonal forest/savanna"),
                               continents = c("Africa"),
                               xgb.model.prefix = "xgb.model",
+                              grid.suffix = "",
                               frac.train = 0.6,
                               biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS",
                               overwrite = TRUE,
@@ -13,7 +14,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   biomes <- readRDS(biome.file) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
-  grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,".RDS")
+  grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,grid.suffix,".RDS")
   model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",model,".",scenario,".CC.pantropical.v11.RDS")
 
   if (scenario == "S3"){

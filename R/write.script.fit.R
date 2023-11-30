@@ -5,6 +5,7 @@ write.script.fit <- function(file = "script.R",
                              biome.names = c("Tropical seasonal forest/savanna"),
                              continents = c("Africa"),
                              xgb.model.prefix = "xgb.model",
+                             grid.suffix = "",
                              frac.train = 0.6,
                              biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS",
                              overwrite = TRUE,
@@ -26,6 +27,8 @@ write.script.fit <- function(file = "script.R",
   write(paste0("continents <- \"",continents,"\""),
         file=file,append=TRUE)
   write(paste0("xgb.model.prefix <- \"",xgb.model.prefix,"\""),
+        file=file,append=TRUE)
+  write(paste0("grid.suffix <- \"",grid.suffix,"\""),
         file=file,append=TRUE)
   write(paste0("frac.train <- \"",frac.train,"\""),
         file=file,append=TRUE)
