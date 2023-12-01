@@ -52,7 +52,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
            lon = round(lon,digits = 2))
 
   # CO2
-  dataC02 <- read.table("./data/CO2_1700_2019_TRENDYv2020.txt",
+  dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/CO2_1700_2019_TRENDYv2020.txt",
                         stringsAsFactors = FALSE) %>%
     mutate(year = as.numeric(str_sub(V1,7,10)),
            CO2 = as.numeric(str_sub(V1,12,17))) %>%
