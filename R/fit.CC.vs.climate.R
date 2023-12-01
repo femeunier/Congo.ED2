@@ -154,7 +154,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
 
   cccdf <-  cccdf %>%
-    group_by(year) %>%
+    group_by(year,lat,lon) %>%
     mutate(group = sample(
       c("train", "validation", "test"),
       size = n(),
