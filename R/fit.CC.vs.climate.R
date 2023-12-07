@@ -7,7 +7,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               xgb.model.prefix = "xgb.model",
                               grid.suffix = "",
                               frac.train = 0.6,
-                              biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.RDS",
+                              biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2022.AI.RDS",
                               overwrite = TRUE,
                               transition.suffix = "transitions"){
 
@@ -62,7 +62,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     arrange(year) %>%
     left_join(dataC02,
               by = c("year")) %>%
-    mutate(CO2 = na.spline(CO2))
+    mutate(CO2 = na.spline(CO2,method = "natural"))
 
 
   if (scenario == "S2"){
