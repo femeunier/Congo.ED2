@@ -11,6 +11,10 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               overwrite = TRUE,
                               transition.suffix = "transitions"){
 
+  if (continents == ""){
+    continents <- c("Africa","America","Australasia")
+  }
+
   biomes <- readRDS(biome.file) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
