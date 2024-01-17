@@ -39,15 +39,15 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       rename(year = time)
   }
 
-  CC.Trendy <- all.models %>%
-    mutate(model.lat.lon = paste0(model,".",lat,".",lon))
+  CC.Trendy <- all.models
 
   # Merge
 
   modelled.sink <- CC.Trendy %>%
     ungroup() %>%
     mutate(lat = round(lat,digits = 2),
-           lon = round(lon,digits = 2))
+           lon = round(lon,digits = 2)) %>%
+    mutate(model.lon.lat = paste0(model,".",lon,".",lat))
 
   # CO2
   dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/global_co2_ann_1700_2022.txt",
@@ -122,12 +122,12 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
 
   ccdf <- sink.vs.climate %>%
     ungroup() %>%
-    mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
-    filter(model.lat.lon %in% coord.list[["model.lon.lat"]]) %>%
+    mutate(model.lon.lat = paste0(model,".",lon,".",lat)) %>%
+    filter(model.lon.lat %in% coord.list[["model.lon.lat"]]) %>%
     mutate(id = 1:n())
 
   cccdf <- ccdf %>%
-    dplyr::select(-c(time,model.lat.lon,
+    dplyr::select(-c(time,model.lon.lat,
                      gpp,npp,nep,ra,rh)) %>%
     dplyr::select(
       where(
