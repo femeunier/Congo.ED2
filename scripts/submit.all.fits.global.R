@@ -6,49 +6,41 @@ library(ED2scenarios)
 library(Congo.ED2)
 library(purrr)
 
-biome.file <- "/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.JRA.1901.2023.AI.RDS"
+biome.file <- "/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2022_global.RDS"
 
 overwrite = TRUE
 models <- TrENDY.analyses::get.model.names.TRENDY()
 
 scenarios <- c("S2")
-prefix <- "XGB.fit.JRA.historical."
-GridSuffix = ".JRA.historical"
+prefix <- "XGB.fit.global."
+GridSuffix = ".all.years_global"
 transition.suffix <- "transitions_reclass"
-continents <- c("America","Africa","Australasia")
 all.vars <- c("gpp","nep","npp")
-biome.names <- c("Humid_large",
-                 "Humid_low",
-                 "Humid_seasonal",
-                 "Dry_subhumid")
 
-# biome.names <- readRDS(biome.file) %>%
-#   pull(biome) %>% unique()
+biome.names <- readRDS(biome.file) %>%
+  pull(biome) %>% unique()
 
 main.dir <- "/data/gent/vo/000/gvo00074/felicien/R"
 
 biomes <- readRDS(biome.file)
 biome.sum <- biomes %>%
-  mutate(continent = Congo.ED2::coord2continent(lon,lat)) %>%
-  group_by(model,continent,biome) %>%
+  group_by(model,biome) %>%
   summarise(N = n(),
             .groups = "keep") %>%
-  mutate(model.continent.biome = paste0(model,".",continent,".",biome)) %>%
-  filter(!is.na(continent))
+  mutate(model.biome = paste0(model,".",biome))
 
 grid <- base::expand.grid(
   list(
     model = models,
     scenario = scenarios,
-    continent = continents,
     biome = biome.names
   ))  %>%
-  mutate(model.continent.biome = paste0(model,".",continent,".",biome)) %>%
+  mutate(model.biome = paste0(model,".",biome)) %>%
   ungroup() %>%
-  dplyr::filter(model.continent.biome %in% biome.sum[["model.continent.biome"]]) %>%
+  dplyr::filter(model.biome %in% biome.sum[["model.biome"]]) %>%
   left_join(biome.sum %>% ungroup() %>%
-              dplyr::select(model.continent.biome,N),
-            by = "model.continent.biome") %>%
+              dplyr::select(model.biome,N),
+            by = "model.biome") %>%
   filter(N > 50) %>%
   arrange(model)
 
@@ -59,11 +51,10 @@ for (irow in seq(1,nrow(grid))){
   crow <- grid[irow,]
   cdir <- file.path(main.dir,"outputs",
                     cname <- (gsub("\\/","",gsub(" ","",
-               paste0("xgb.fit.",
-                 crow[["model"]],".",
-                 crow[["scenario"]],".",
-                 crow[["continent"]],".",
-                 crow[["biome"]])))))
+                                                 paste0("xgb.fit.global.",
+                                                        crow[["model"]],".",
+                                                        crow[["scenario"]],".",
+                                                        crow[["biome"]])))))
   dir.create(cdir,showWarnings = FALSE)
 
   Rscript.name <- file.path(cdir,script.name <- "Rscript.R")
@@ -73,12 +64,11 @@ for (irow in seq(1,nrow(grid))){
     scenario = crow[["scenario"]],
     vars = all.vars,
     biome.names = crow[["biome"]],
-    continents = crow[["continent"]],
+    continents = ,
     xgb.model.prefix = gsub("\\/","",gsub(" ","",
                                           paste0(prefix,
                                                  crow[["model"]],".",
                                                  crow[["scenario"]],".",
-                                                 crow[["continent"]],".",
                                                  crow[["biome"]]))),
     grid.suffix = GridSuffix,
     biome.file = biome.file,
@@ -101,4 +91,4 @@ dumb <- write_bash_submission(file = file.path(getwd(),"All.fits.XGB.sh"),
                               list_files = list_dir,
                               job_name = jobname)
 
-# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/submit.all.fits.R hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/
+# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/submit.all.fits.global.R hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/

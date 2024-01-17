@@ -60,13 +60,10 @@ modelled.sink <- CC.Trendy %>%
   mutate(lat = round(lat,digits = 2),
          lon = round(lon,digits = 2))
 
-# CO2
-dataC02 <- read.table("./data/CO2_1700_2019_TRENDYv2020.txt",
+dataC02 <- read.table("./data/global_co2_ann_1700_2022.txt",
                       stringsAsFactors = FALSE) %>%
-  mutate(year = as.numeric(str_sub(V1,7,10)),
-         CO2 = as.numeric(str_sub(V1,12,17))) %>%
-  dplyr::select(year,CO2) %>%
-  mutate(month = 1)
+  rename(year = V1,
+         CO2 = V2)
 
 dataC02.all <- data.frame(year = rep(sort(unique(dataC02$year)),12)) %>%
   group_by(year) %>%

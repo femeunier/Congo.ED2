@@ -19,12 +19,13 @@ library(zoo)
 
 overwrite = FALSE
 models <- TrENDY.analyses::get.model.names.TRENDY()
+models <- c("CABLE-POP")
 all.grids <- data.frame()
 
 existing.models <- c()
 for (cmodel in models){
 
-  grid.file <- paste0("./data/grid.",cmodel,".RDS")
+  grid.file <- paste0("./data/grid.",cmodel,".JRA.historical.RDS")
 
   if (!all(file.exists(grid.file))){
     next()
@@ -42,8 +43,8 @@ for (cmodel in models){
     mutate(tmin = tmin - 273.15,
            tmax = tmax - 273.15,
            tmp = tmp - 273.15) %>%
-    group_by(lat) %>%
-    mutate(ET0 = N/30*SPEI::hargreaves(tmin,tmax,lat = unique(lat), Pre = pre,na.rm = TRUE,
+    group_by(lat,lon) %>%
+    mutate(ET0 = N/30*SPEI::hargreaves(tmin,tmax,lat = unique(lat),Pre = pre,na.rm = TRUE,
                                       verbose = FALSE)) %>%
     group_by(lon,lat,month) %>%
     summarise(Pmm = mean(pre),
@@ -119,6 +120,6 @@ all.grids <- all.grids %>%
 
 
 saveRDS(all.grids,
-        "./outputs/biome.CRUJRA.1901.2019.AI.RDS")
+        "./outputs/biome.JRA.1901.2023.AI.RDS")
 
 # scp /home/femeunier/Documents/projects/Congo.ED2/scripts/define.ecosystems.AI.R hpc:/data/gent/vo/000/gvo00074/felicien/R

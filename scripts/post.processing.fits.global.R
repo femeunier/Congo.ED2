@@ -12,26 +12,23 @@ library(SHAPforxgboost)
 
 ################################################################################
 
-xgb_model.prefix <- "XGB.fit.JRA.historical"
-suffix.generic <- "JRA_historical"
+xgb_model.prefix <- "XGB.fit.global"
+suffix.generic <- "global"
 compute.shape = FALSE
 
 models <- TrENDY.analyses::get.model.names.TRENDY()
 models <- c("CABLE-POP")
 
 scenarios <- c("S2")
-continents <- c("Africa","America","Australasia")
+continents <- ""
 all.vars <- c("gpp","nep",'npp')
-biome.names <- c("Humid_large",
-                 "Humid_low",
-                 "Humid_seasonal",
-                 "Dry_subhumid")
+biome.names <- readRDS("/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2022_global.RDS") %>%
+  pull(biome) %>% unique()
 
 grid <- base::expand.grid(
   list(
     model = models,
     scenario = scenarios,
-    continent = continents,
     biome = biome.names
   ))
 
@@ -51,12 +48,11 @@ for (cvar in all.vars){
   for (irow in seq(1,nrow(grid))){
 
     crow <- grid[irow,] ; cmodel <- crow[["model"]] ; cscenario <- crow[["scenario"]]
-    cContinent <- crow[["continent"]] ; cbiome <- crow[["biome"]]
+    cbiome <- crow[["biome"]]
     cname <- gsub("\\/","",gsub(" ","",
                                 paste0(xgb_model.prefix,".",
                                        cmodel,".",
                                        cscenario,".",
-                                       cContinent,".",
                                        cbiome)))
 
     cname.var <- paste0(cname,".",cvar)
@@ -101,8 +97,7 @@ for (cvar in all.vars){
         arrange(lon,lat,year,month) %>%
         mutate(model = cmodel,
                var = cvar,
-               biome = cbiome,
-               continent = cContinent) %>%
+               biome = cbiome) %>%
         mutate(model.lat.lon = paste0(model,".",lat,".",lon)))
 
 
@@ -114,27 +109,24 @@ for (cvar in all.vars){
                                          .groups = "keep") %>%
                                mutate(model = cmodel,
                                       var = cvar,
-                                      biome = cbiome,
-                                      continent = cContinent))
+                                      biome = cbiome))
 
     df.ts <- bind_rows(df.ts,
-                             full.dataset %>%
-                               filter(type == "test") %>%
-                               group_by(origin,year) %>%
-                               summarise(value.m = mean(value,na.rm = TRUE),
-                                         .groups = "keep") %>%
-                               mutate(model = cmodel,
-                                      var = cvar,
-                                      biome = cbiome,
-                                      continent = cContinent))
+                       full.dataset %>%
+                         filter(type == "test") %>%
+                         group_by(origin,year) %>%
+                         summarise(value.m = mean(value,na.rm = TRUE),
+                                   .groups = "keep") %>%
+                         mutate(model = cmodel,
+                                var = cvar,
+                                biome = cbiome))
 
     df.predict <- bind_rows(df.predict,
                             data.frame(pred = predicted,
                                        obs = test.label) %>%
                               mutate(model = cmodel,
                                      var = cvar,
-                                     biome = cbiome,
-                                     continent = cContinent))
+                                     biome = cbiome))
 
     df.r2 <- bind_rows(df.r2,
                        data.frame(r2 = 1 - sum((predicted- test.label)**2)/sum(((test.label - mean(test.label))**2)),
@@ -143,8 +135,7 @@ for (cvar in all.vars){
                                   value.med = median(abs(test.label)),
                                   model = cmodel,
                                   var = cvar,
-                                  biome = cbiome,
-                                  continent = cContinent))
+                                  biome = cbiome))
 
     importance_matrix = xgb.importance(colnames(test.data),
                                        model = xgb_model$finalModel)
@@ -153,7 +144,6 @@ for (cvar in all.vars){
                                as.data.frame(importance_matrix) %>%
                                  mutate(model = cmodel,
                                         biome = cbiome,
-                                        continent = cContinent,
                                         var = cvar))
 
     df.coord <- bind_rows(df.coord,
@@ -163,13 +153,12 @@ for (cvar in all.vars){
                             dplyr::select(lat,lon) %>%
                             distinct() %>%
                             mutate(model = cmodel,
-                                   biome = cbiome,
-                                   continent = cContinent)) %>%
+                                   biome = cbiome)) %>%
       distinct()
 
 
     selected.dataset <- full.dataset %>%
-      group_by(model,continent,var,biome) %>%
+      group_by(model,var,biome) %>%
       filter(model.lat.lon %in%
                sample(unique(model.lat.lon),1,replace = FALSE)) %>%
       ungroup()
@@ -180,7 +169,6 @@ for (cvar in all.vars){
     selected.dataset.comp <- selected.dataset %>%
       complete(model.lat.lon = unique(selected.dataset$model.lat.lon),
                origin = "model",
-               continent = unique(selected.dataset$continent),
                biome = unique(selected.dataset$biome),
                model = unique(selected.dataset$model),
                type = "test",
@@ -206,8 +194,7 @@ for (cvar in all.vars){
                                               shap = as.vector(shape.score)) %>%
                                      mutate(model = cmodel,
                                             var = cvar,
-                                            biome = cbiome,
-                                            continent = cContinent))
+                                            biome = cbiome))
 
       shap_long <- shap.prep(shap_contrib = shap_values$shap_score,
                              X_train = xgb_model$trainingData[ids,])
@@ -216,8 +203,7 @@ for (cvar in all.vars){
                                  shap_long %>%
                                    mutate(model = cmodel,
                                           var = cvar,
-                                          biome = cbiome,
-                                          continent = cContinent))
+                                          biome = cbiome))
     }
   }
 
@@ -246,5 +232,5 @@ for (cvar in all.vars){
   }
 }
 
-# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/post.processing.fits.R hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/
+# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/post.processing.fits.global.R hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/
 

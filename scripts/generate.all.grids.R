@@ -14,7 +14,7 @@ library(ggpointdensity)
 
 models <- TrENDY.analyses::get.model.names.TRENDY()
 
-Tropics.sum <- readRDS("./outputs/monthly.climate.pantropical.RDS")
+Tropics.sum <- readRDS("./outputs/monthly.climate.global.all.RDS")
 CN <- colnames(Tropics.sum)
 Var.names <- CN[!(CN %in% c("lat","lon","year","month"))]
 
@@ -23,16 +23,16 @@ all.grids <- data.frame()
 overwrite = TRUE
 for (cmodel in models){
 
-  model.file <- paste0("./outputs/Trendy.",cmodel,".S2.CC.pantropical.v11.RDS")
+  model.file <- paste0("./outputs/Trendy.",cmodel,".S2.global.v11.RDS")
   print(cmodel)
 
   if (!file.exists(model.file)){
-    model.file <- paste0("./outputs/Trendy.",cmodel,".S3.CC.pantropical.v11.RDS")
+    model.file <- paste0("./outputs/Trendy.",cmodel,".S2.CC.global.v11.RDS")
   }
 
   if (!file.exists(model.file)) next()
 
-  OPfile <- paste0("./data/grid.",cmodel,".RDS")
+  OPfile <- paste0("./data/grid.",cmodel,".all.years_global.RDS")
 
   if (file.exists(OPfile) & !overwrite){next()}
 
@@ -55,14 +55,27 @@ for (cmodel in models){
 
     cdf <- Biomass.Trendy
 
+
+    craster <- tryCatch(rasterFromXYZ((cdf %>%
+                                         ungroup() %>%
+                                         filter(year == year[1],
+                                                month == month[1]) %>%
+                                         dplyr::select(c("lat","lon",cvar)))[,c("lon","lat",cvar)]),
+                                         error = function(e) NULL)
+
+    if (is.null(craster)){
+
+      craster <- tryCatch(raster(suppressWarnings(SpatialPixelsDataFrame(points = cdf[c("lon","lat")],
+                                                                     data = cdf[cvar],
+                                                                     tolerance = 0.0001))),
+                      error = function(e) NULL)
+
+    }
+
     test <- resample.df.all.col(bigdf = Tropics.sum %>%
                                   mutate(model = "CRUJRA"),
 
-                                raster2resample = rasterFromXYZ((cdf %>%
-                                                                   ungroup() %>%
-                                                                   filter(year == year[1],
-                                                                          month == month[1]) %>%
-                                                                   dplyr::select(c("lat","lon",cvar)))[,c("lon","lat",cvar)]),
+                                raster2resample = craster,
                                 var.names = Var.names,
                                 NULL)
   cgrid <- test %>%

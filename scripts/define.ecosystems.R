@@ -24,7 +24,7 @@ all.grids <- data.frame()
 existing.models <- c()
 for (cmodel in models){
 
-  grid.file <- paste0("./data/grid.",cmodel,".RDS")
+  grid.file <- paste0("./data/grid.",cmodel,".all.years_global.RDS")
 
   if (!all(file.exists(grid.file))){
     next()
@@ -116,6 +116,6 @@ all.grids %>%
   arrange(desc(N))
 
 saveRDS(all.grids,
-        "./outputs/biome.CRUJRA.1901.2019.RDS")
+        "./outputs/biome.CRUJRA.1901.2022_global.RDS")
 
 # scp /home/femeunier/Documents/projects/Congo.ED2/scripts/define.ecosystems.R hpc:/data/gent/vo/000/gvo00074/felicien/R

@@ -6,14 +6,14 @@ library(ED2scenarios)
 library(Congo.ED2)
 library(purrr)
 
-biome.file <- "/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2019.AI.RDS"
+biome.file <- "/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2022.AI.RDS"
 
 overwrite = FALSE
 models <- TrENDY.analyses::get.model.names.TRENDY()
-scenarios <- c("S3")
+scenarios <- c("S2")
 prefix <- "XGB.fit.reclass."
 transition.suffix <- "transitions_reclass"
-continents <- c("Africa","America")
+continents <- c("Australasia")
 all.vars <- c("gpp","npp","nep")
 biome.names <- c("Humid_large",
                  "Humid_low",
@@ -101,7 +101,7 @@ for (irow in seq(1,nrow(grid))){
 
   # Create job file
   ED2scenarios::write_jobR(file = file.path(cdir,jobname),
-                           nodes = 1,ppn = 16,mem = 64,walltime = 24,
+                           nodes = 1,ppn = 16,mem = 64,walltime = 72,
                            prerun = "ml purge ; ml R-bundle-Bioconductor/3.15-foss-2021b-R-4.2.0",
                            CD = "/data/gent/vo/000/gvo00074/felicien/R/",
                            Rscript = Rscript.name)

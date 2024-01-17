@@ -348,3 +348,75 @@ for (cyear in all.years){
 
 saveRDS(df.all.GPP,
         "./data/GPP/df.all.GPP3.RDS")
+
+################################################################################
+
+rm(list = ls())
+
+library(ncdf4)
+library(dplyr)
+library(lubridate)
+library(reshape2)
+library(raster)
+library(TrENDY.analyses)
+library(ggplot2)
+library(tidyr)
+
+ncfile <- "/home/femeunier/Downloads/VODCA2GPP_v1.nc"
+nc <- nc_open(ncfile)
+
+all.lats <- ncvar_get(nc,"lat")
+pos.lats <- which(abs(all.lats) <= 25)
+lats <- all.lats[pos.lats]
+lons <- ncvar_get(nc,"lon")
+all.times <- as.Date(ncvar_get(nc,"time"),
+                     origin = "1858-11-17 00:00:00")
+years <- unique(year(all.times))
+
+biomes <- readRDS("./outputs/biome.CRUJRA.1901.2022.AI.RDS") %>%
+  filter(model == unique(model)[14])
+craster <- rasterFromXYZ(biomes %>%
+                           dplyr::select(c(lon,lat,MAP)))
+
+# df.all <- readRDS("./outputs/VOD.GPP.RDS")
+df.all <- data.frame()
+for (cyear in years){
+
+  print(cyear)
+  which.year <- which(year(all.times) == cyear)
+  times <- all.times[which.year]
+
+  GPP <- ncvar_get(nc,"GPP",
+                   start = c(1,min(pos.lats),min(which.year)),
+                   count = c(length(lons),length(pos.lats),length(which.year)))
+
+  df.GPP <- melt(GPP) %>%
+    mutate(lat = lats[Var2],
+           lon = lons[Var1],
+           time = times[Var3]) %>%
+    dplyr::select(-c(Var1,Var2,Var3)) %>%
+    mutate(month = month(time),
+           year = year(time))
+
+  df.GPP.sum <- df.GPP %>%
+    group_by(year,month,lat,lon) %>%
+    summarise(value = mean(value),
+              .groups = "keep")
+
+  cdf <- resample.df.all.col(bigdf = df.GPP.sum,
+
+                              raster2resample = craster,
+                              var.names = c("value"),
+                              NULL)
+
+  df.all <- bind_rows(df.all,
+                      cdf %>%
+                        filter(!is.na(value)))
+
+  print(nrow(df.all)/1e6)
+}
+
+nc_close(nc)
+
+saveRDS(df.all,
+        "./data/GPP/monthly/VOD.GPP.RDS")
