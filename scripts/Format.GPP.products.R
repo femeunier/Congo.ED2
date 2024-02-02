@@ -7,6 +7,7 @@ library(dplyr)
 e <- extent(-90,165,-23.5,23.5)
 
 # https://figshare.com/articles/dataset/Monthly_GPP_at_0_5_degree/5048011?backTo=/collections/A_global_moderate_resolution_dataset_of_gross_primary_production_of_vegetation_for_2000-2016/3789814
+# Zhang based on Modis + NCEP
 
 all.df.GPP <- data.frame()
 all.years = 2000:2016
@@ -67,6 +68,7 @@ saveRDS(all.df.GPP,
 
 ################################################################################
 # https://daac.ornl.gov/VEGETATION/guides/Global_Monthly_GPP.html
+# Madhani, based on fluxnet
 rm(list = ls())
 
 library(ncdf4)
@@ -301,7 +303,7 @@ saveRDS(df.all.gpp.sum,
 #
 
 ################################################################################
-# Fluxcom
+# Fluxcom_CRU
 
 rm(list = ls())
 
@@ -350,6 +352,8 @@ saveRDS(df.all.GPP,
         "./data/GPP/df.all.GPP3.RDS")
 
 ################################################################################
+# https://researchdata.tuwien.ac.at/records/1k7aj-bdz35
+
 
 rm(list = ls())
 

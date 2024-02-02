@@ -24,11 +24,22 @@ all <- bind_rows(readRDS("./outputs/Congo.mean.JRA.historical.IFL.sum.RDS") %>%
                  readRDS("./outputs/Amazon.mean.JRA.historical.IFL.sum.RDS") %>%
                    mutate(basin = "Amazon"))
 
+
+Weights <- readRDS("./outputs/weights.Trendy.RDS") %>%
+  filter(model %in% "SIF2") %>%
+  rename(gpp.product = model,
+         model = trendy.model)
+
 all <- bind_rows(all,
                  all %>%
+                   left_join(Weights %>%
+                               filter(slope > 0) %>%
+                               dplyr::select(-c(r2,slope,gpp.product)),
+                             by = c("model","basin")) %>%
+                   filter(!is.na(r)) %>%
                    group_by(basin, year, month, var) %>%
-                   summarise(pred = mean(pred, na.rm = TRUE),
-                             obs = mean(obs, na.rm = TRUE),
+                   summarise(pred = weighted.mean(pred,r, na.rm = TRUE),
+                             obs = weighted.mean(obs, r,na.rm = TRUE),
                              .groups = "keep") %>%
                    mutate(model = "MEM"))
 
@@ -49,11 +60,9 @@ ggplot(data = all %>%
   theme_bw()
 
 MEM <- all %>%
-  filter(model != "MEM") %>%
-  group_by(var,year,month,basin) %>%
-  summarise(pred.MEM = mean(pred,na.rm = TRUE),
-            obs.MEM = mean(obs,na.rm = TRUE),
-            .groups = "keep")
+  filter(model == "MEM") %>%
+  rename(pred.MEM = pred,
+         obs.MEM = obs)
 
 ggplot(data = MEM) +
   geom_line(aes(x = year + (month - 1/2)/12,
@@ -68,14 +77,16 @@ MEM.diff <- MEM %>%
   pivot_wider(names_from = basin,
               values_from = c(pred.MEM,obs.MEM)) %>%
   mutate(diff.pred = pred.MEM_Congo - pred.MEM_Amazon,
-         diff.obs = obs.MEM_Congo - obs.MEM_Amazon)
+         diff.obs = obs.MEM_Congo - obs.MEM_Amazon) %>%
+  group_by(var) %>%
+  mutate(diff.pred.rmean = rollmean(diff.pred, 6, na.pad=TRUE, align = "center"))
 
-ggplot(data = MEM.diff,
+ggplot(data = MEM.diff %>%
+         ungroup( ),
        aes(x = year + (month - 1/2)/12)) +
   geom_line(aes(y = diff.pred), color = "grey") +
+  geom_line(aes(y = diff.pred.rmean), color = "red") +
   scale_x_continuous(limits = c(1958,2024)) +
-  geom_line(aes(y=rollmean(diff.pred, 12, na.pad=TRUE)),
-            color = "red") +
   geom_hline(yintercept = 0, linetype = 2, color = "black") +
   facet_wrap(~ var,scales = "free") +
   theme_bw()
@@ -83,13 +94,16 @@ ggplot(data = MEM.diff,
 MEM.diff.year <- MEM.diff %>%
   group_by(var,year) %>%
   summarise(diff.pred = mean(diff.pred),
-            .groups = "keep")
+            .groups = "keep") %>%
+  group_by(var) %>%
+  mutate(diff.pred.rmean = rollmean(diff.pred, 5, na.pad=TRUE, align = "center"))
 
-ggplot(data = MEM.diff.year,
+ggplot(data = MEM.diff.year %>%
+         group_by(var),
        aes(x = year)) +
   geom_line(aes(y = diff.pred), color = "grey") +
   scale_x_continuous(limits = c(1958,2024)) +
-  geom_line(aes(y=rollmean(diff.pred, 5, na.pad=TRUE, align = "center")),
+  geom_line(aes(y=diff.pred.rmean),
             color = "red") +
   geom_hline(yintercept = 0, linetype = 2, color = "black") +
   facet_wrap(~ var,scales = "free") +

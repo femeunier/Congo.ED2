@@ -8,6 +8,7 @@ library(maptools)
 library(akima)
 library(RColorBrewer)
 library(pracma)
+library(lubridate)
 
 dir <- "/home/femeunier/Documents/projects/SIF.data/data/"
 dir <- "/home/femeunier/Downloads/"
@@ -20,7 +21,7 @@ raster <- rasterFromXYZ(biomes %>%
 years <- 2000:2022
 months <- 1:12
 
-SF <- 0.01/1000*1000/365*12        # Scaling factor
+SF <- (0.01)        # Scaling factor
 
 first <- TRUE
 
@@ -65,7 +66,9 @@ for (iyear in seq(1,length(years))){
 
     craster <- raster(file.path(dir,file.name))
     craster[craster >= 32766] <- NA_real_       # Water bodies, oceans
-    craster <- craster*SF
+
+    Ndays <- as.numeric(lubridate::days_in_month(as.Date(paste0(year,"/",sprintf("%02d",month),"/01"))))
+    craster <- craster*SF/Ndays # gC/day
 
     dumb <- file.remove(file)
 
@@ -79,6 +82,7 @@ for (iyear in seq(1,length(years))){
                                                                    data = cdf["value"],
                                                                    tolerance = 0.01))),
                      10)
+
 
     all.df <- bind_rows(all.df,
                         as.data.frame(ccdf,
@@ -110,6 +114,8 @@ ggplot() +
   geom_map(data = mymap,
            map = mymap,
            aes(x = long, y = lat, map_id = id), fill = NA, color = "black") +
+  coord_sf(xlim = c(-90, -30),
+           ylim = c(-25, 12)) +
   # geom_point(aes(x = (e@xmin+e@xmax)/2,
   #                y = (e@ymin+e@ymax)/2),
   #           color = "red", fill = NA) +
@@ -120,10 +126,15 @@ ggplot() +
   # scale_y_continuous(limits = c(-15,10),
   #                    expand = c(0, 0)) +
   labs(x = "Lon", y = "Lat", fill = "SIF") +
-  coord_equal() +
+  # coord_equal() +
   theme_void()
 
-saveRDS(all.df,
-        "./data/GPP/monthly/SIF.GPP.RDS")
+# all.df %>%
+#   filter(lat == -11.25,
+#          lon == -72.25)
+
+# -11.75 -72.25 2018    10 NaN
+# saveRDS(all.df,
+#         "./data/GPP/monthly/SIF.GPP.RDS")
 
 

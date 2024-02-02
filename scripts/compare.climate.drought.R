@@ -7,19 +7,158 @@ library(tidyr)
 library(dismo)
 library(tie)
 
-climate <- readRDS("./outputs/monthly.climate.pantropical.JRA.historical.RDS")
+coord <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
+  filter(model == "ORCHIDEE") %>%
+  mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2)))
+
+climate <- readRDS("./outputs/monthly.climate.pantropical.JRA.historical.RDS") %>%
+  filter(year >= 1994)
 
 climate.select <- climate %>%
-  mutate(timing = case_when(year %in% c(1961:1990) ~ "original",
-                            year == 2010 ~ "2010",
+  mutate(timing = case_when(year %in% c(1992:2020) ~ "original",
+                            # year == 2010 ~ "2010",
                             year == 2023 ~ "2023",
                             TRUE ~ NA_character_)) %>%
-  filter(!is.na(timing))
+  mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2))) %>%
+  filter(lon.lat %in% coord[["lon.lat"]]) %>%
+  mutate(N = days_in_month(as.Date(paste0(year,"/",sprintf("%20d",month),"/01"))))
 
+climate.sum <- climate.select %>%
+  group_by(year,month) %>%
+  summarise(tmp = mean(tmp),
+            spfh = mean(spfh),
+            VPD = mean(VPD),
+            dswrf = mean(dswrf),
+            dlwrf = mean(dlwrf),
+            tmin = mean(tmin),
+            tmax = mean(tmax),
+            pre = mean(pre*N*4),
+            .groups = "keep") %>%
+  pivot_longer(cols = -c(year,month),
+               names_to = "variable",
+               values_to = "value")
+
+climate.sum %>%
+  mutate(semester = case_when(month <= 6 ~ 1,
+                              TRUE ~ 2)) %>%
+  filter(variable == "tmp") %>%
+  group_by(year,semester) %>%
+  summarise(value.m = mean(value)) %>%
+  arrange(desc(value.m))
+
+ggplot(data = climate.sum %>%
+         filter(variable == "tmp") ) +
+  geom_line(aes(x = year + (month - 1/2)/12,
+                y = value)) +
+  theme_bw()
+
+
+climate.sum.anomaly <- climate.sum %>%
+  mutate(time = year + (month -1/2)/12) %>%
+  group_by(variable) %>%
+  mutate(slope = coef(lm(value ~ time))[2],
+         intercept = coef(lm(value ~ time))[1]) %>%
+  # mutate(mean.obs = slope*(time) + intercept) %>%
+  mutate(mean.obs = mean(value)) %>%
+  mutate(detrended = value - mean.obs) %>%
+  group_by(variable,month) %>%
+  mutate(mean.month = mean(detrended)) %>%
+  mutate(anomaly = detrended - mean.month) %>%
+  # mutate(reconstructed = intercept + time*slope + mean.month) %>%
+  mutate(reconstructed = mean.obs + mean.month) %>%
+  group_by(variable) %>%
+  mutate(anomaly.m = anomaly/sd(anomaly))
+
+ggplot(data = climate.sum,
+       aes(x = year + (month - 1/2)/12,
+           y = value)) +
+  geom_line(data = climate.sum.anomaly,
+            aes(y = reconstructed),
+            color = "red", size = 0.4) +
+  geom_line() +
+  facet_wrap(~ variable,scales = "free") +
+  scale_x_continuous(limits = c(1990,2024),
+                     expand = c(0,0)) +
+  # stat_smooth(method = "lm",
+  #             color = "red",
+  #             se = FALSE) +
+  theme_bw()
+
+droughts <- data.frame(x1 = c(1997,2009,2004,2015,2023) + 0.5/12,
+                       x2 = c(1998,2010,2005,2016,2023) +
+                         11.5/12)
+
+ggplot() +
+  geom_rect(data = droughts,
+            aes(xmin = x1, xmax = x2,
+                ymin = -Inf, ymax = Inf), color = NA,
+            alpha = 0.3, fill = "grey") +
+  geom_line(data = climate.sum.anomaly,
+            aes(x = year + (month - 1/2)/12,
+                y = anomaly.m)) +
+  facet_wrap(~ variable,scales = "free") +
+  scale_x_continuous(limits = c(1990,2024),
+                     expand = c(0,0)) +
+  scale_y_continuous(limits = c(-1,1)*3.5) +
+  geom_hline(yintercept = 0, linetype = 2, color = "black") +
+  theme_bw()
+
+saveRDS(climate.sum.anomaly,
+        "./outputs/climate.anomalies.RDS")
+
+# plot(climate.sum.anomaly %>%
+#        # filter(year == 1958) %>%
+#        filter(variable == "tmp") %>%
+#        pull(mean.obs),type = "l")
+
+stop()
+
+################################################################################
+
+climate.select.oct <- climate.select %>%
+  filter(month == 10)
+
+climate.select.oct.long <- climate.select.oct %>%
+  dplyr::select(-c(lon.lat)) %>%
+  pivot_longer(cols = -c(timing,lon,lat),
+               names_to = "biovar",
+               values_to = "value")
+
+ggplot(data = climate.select.oct.long) +
+  geom_density(aes(x = value,
+                   fill = timing),
+               alpha = 0.3, color = NA) +
+    facet_wrap(~ biovar,scales = "free") +
+    theme_bw()
+
+sc <- climate.select %>%
+  # group_by(timing,month) %>%
+  dplyr::select(-c(lon.lat)) %>%
+  pivot_longer(cols = -c(timing,lon,lat,month),
+               names_to = "biovar",
+               values_to = "value")  %>%
+  filter(biovar != "year") %>%
+  group_by(timing,month,biovar) %>%
+  summarise(value.m = mean(value),
+            .groups = "keep")
+
+ggplot(data = sc %>%
+         filter(biovar %in% c("tmp",
+                              "spfh",'tmin',
+                              "tmax","pre",
+                              "VPD"),
+                timing %in% c("original","2023"))) +
+  geom_line(aes(x = month,
+                y = value.m,
+                color = timing)) +
+  facet_wrap(~ biovar,scales = "free") +
+  theme_bw()
+
+
+################################################################################
 # Only MAP first
 monthly.precip <- climate.select %>%
   ungroup() %>%
-  mutate(N = days_in_month(as.Date(paste0(year,"/",sprintf("%20d",month),"/01")))) %>%
   mutate(pre = pre*4*N)
 
 MAP <- monthly.precip %>%

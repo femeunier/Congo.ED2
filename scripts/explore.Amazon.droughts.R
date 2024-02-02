@@ -13,15 +13,14 @@ files <- c("df.all.ts.JRA.historical.RDS",
            "df.all.year.JRA.historical.RDS",
            "df.all.ts.MEM.JRA.historical.RDS",
            "df.all.year.MEM.JRA.historical.RDS",
-           "Amazon.mean.JRA.historical.RDS",
-           "Amazon.JRA.historical.RDS")
+           "Amazon.mean.JRA.historicalIFL.RDS",
+           "Amazon.JRA.historical.IFL.RDS")
 
 biomes <- readRDS("./outputs/biome.CRUJRA.1901.2022.AI.RDS") %>%
   filter(model == unique(model)[14]) %>%
   mutate(continent = coord2continent(lon,lat))
 craster <- rasterFromXYZ(biomes %>%
                            dplyr::select(c(lon,lat,MAP)))
-
 
 biomes.continents <- biomes %>%
   group_by(biome,continent) %>%
@@ -133,6 +132,23 @@ ggplot(MEM.year) +
 
   facet_grid(biome ~ continent) +
   theme_bw()
+
+
+
+ggplot(MEM.year %>%
+         group_by(continent,var,biome) %>%
+         mutate(anomaly.pred = pred.MEM.m - mean(pred.MEM.m[year %in% 2000:2024])) %>%
+         filter(continent == "America",
+                var == "nep")) +
+
+  geom_line(aes(x = (year), y = anomaly.pred,color = biome),
+            linetype = 2) +
+
+  geom_hline(yintercept = 0, linetype = 2) +
+
+  scale_x_continuous(limits = c(2000,2024)) +
+  theme_bw()
+
 
 
 MEM.year.diff <- MEM.year %>%

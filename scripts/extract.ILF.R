@@ -1,5 +1,7 @@
 rm(list = ls())
 
+library(sf)
+library(ggthemes)
 # IFL <- read_sf(dsn = "/home/femeunier/Documents/projects/Congo.ED2/data/IFL/",
 #                       layer = "ifl_2020")
 # IFL$type = 1
@@ -27,6 +29,9 @@ rm(list = ls())
 
 
 ILF.df  <- readRDS("./outputs/ILF2020.df")
+ILF.df  <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
+  filter(model == "ORCHIDEE")
+
 
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
@@ -36,27 +41,28 @@ Amazon <- as_Spatial(Amazon.shp)
 Congo.shp <- read_sf(dsn = "/home/femeunier/Desktop/FWO/",
                      layer = "CongoBasin")
 Congo <- as_Spatial(Congo.shp)
+
 ggplot() +
 
-  geom_raster(data = ILF.df,
+  geom_tile(data = ILF.df,
               aes(x = lon, y = lat,
-                  fill = as.factor(is.undisturbed.factor)), alpha = 1,
-              linewidth = 0.5,
+                  fill = as.factor(is.undisturbed.factor)), alpha = 0.5,
+              linewidth = 0.5, color = "black",
               show.legend = FALSE) +
 
   geom_sf(data = world,
-          fill = NA) +
-  geom_sf(data = Amazon.shp,fill = NA, color = "red", fill = NA) +
+          fill = NA, color = "black") +
+  geom_sf(data = Amazon.shp,fill = NA, color = "black", fill = NA) +
 
   # coord_sf(xlim = c(-15, 50),
   #          ylim = c(-20, 15)) +
-  coord_sf(xlim = c(-100, 150),
-           ylim = c(-25, 25)) +
+  coord_sf(xlim = c(-90, -30),
+           ylim = c(-25, 12)) +
   labs(x = "",y = "") +
   # facet_wrap(~ model) +
   theme_map() +
   labs(fill = "") +
-  scale_fill_manual(values = c("white","darkgrey")) +
+  scale_fill_manual(values = c("grey","white")) +
   theme(text = element_text(size = 20),
         legend.position = "top")
 
@@ -67,7 +73,6 @@ models <- sort(unique(climate$model))
 
 all.coord <- all.coord2 <-
   data.frame()
-
 
 for (cmodel in models){
 
@@ -111,9 +116,11 @@ for (cmodel in models){
 
   all.coord <- bind_rows(all.coord,
                          data.frame(model = cmodel,
-                                    lon = out$x,
-                                    lat = out$y) %>%
-    left_join(cILF,
+                                    lon = round(out$x,digits = 2),
+                                    lat = round(out$y,digits = 2)) %>%
+    left_join(cILF %>%
+                mutate( lon = round(lon,digits = 2),
+                        lat = round(lat,digits = 2)),
               by = c("lat","lon")) %>%
       filter(is.undisturbed.factor == 1) %>%
       mutate(model.lon.lat =
@@ -121,14 +128,18 @@ for (cmodel in models){
 
   all.coord2 <- bind_rows(all.coord2,
                           data.frame(model = cmodel,
-                                     lon = out2$x,
-                                     lat = out2$y) %>%
-                            left_join(cILF,
+                                     lon = round(out2$x,digits = 2),
+                                     lat = round(out2$y,digits = 2)) %>%
+                            left_join(cILF %>%
+                                        mutate( lon = round(lon,digits = 2),
+                                                lat = round(lat,digits = 2)),
                                       by = c("lat","lon")) %>%
                             filter(is.undisturbed.factor == 1) %>%
                             mutate(model.lon.lat =
                                      paste0(cmodel,".",lon,".",lat)))
 }
+
+world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 
 ggplot() +
 
