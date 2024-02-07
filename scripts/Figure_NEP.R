@@ -3,6 +3,7 @@ rm(list = ls())
 library(dplyr)
 library(ggplot2)
 library(zoo)
+library(tidyr)
 
 A <- readRDS("./outputs/CC.anomaly.RDS")
 
@@ -16,7 +17,7 @@ droughts <- data.frame(x1 = c(1997,2009,2015,2023) + 0.5/12,
                        x2 = c(1998,2010,2016,2023) +
                          11.5/12)
 
-Window = 6
+Window = 12
 
 A2plot <- A %>%
   arrange(year,month) %>%
@@ -38,12 +39,21 @@ ggplot(data = A2plot) +
              size = 0.2) +
   geom_line(aes(x = time,
                 y = pred.m.rm_nep)) +
+  stat_smooth(aes(x = time,
+                  y = pred.m_nep),
+              method = "lm",
+              se = FALSE, color = "black",
+              linetype = 2) +
   scale_x_continuous(limits = c(1994,2021)) +
   geom_hline(yintercept = 0, linetype = 2) +
   theme_bw() +
   labs(x = "", y = "") +
   theme(text = element_text(size = 20))
 
+summary(lm(data = A2plot,
+           formula = pred.m_nep ~ time))
+coef(lm(data = A2plot,
+           formula = pred.m_nep ~ time))
 
 ggplot(data = A2plot) +
   geom_density(aes(x = pred.m_nep),

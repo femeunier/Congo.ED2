@@ -9,7 +9,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               frac.train = 0.6,
                               biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2022.AI.RDS",
                               overwrite = TRUE,
-                              transition.suffix = "transitions"){
+                              transition.suffix = "transitions",
+                              climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
   if (continents == ""){
     continents <- c("Africa","America","Australasia")
@@ -36,7 +37,11 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   all.models <- readRDS(model.file) %>%
     dplyr::select(-starts_with("time.unit"))
 
-  all.grids <- readRDS(grid.file)
+  all.grids <- readRDS(grid.file) %>%
+    dplyr::select(c("lon","lat",
+                    "year","month",
+                    "model",
+                    climate.vars))
 
   if (scenario == "S3"){
     all.grids.transitions <- readRDS(grid.file.transition) %>%

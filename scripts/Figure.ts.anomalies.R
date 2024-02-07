@@ -55,6 +55,8 @@ all %>%
   summarise(r2 = summary(lm(formula = pred.m ~ time))[["r.squared"]],
             pval = summary(lm(formula = pred.m ~ time))[["coefficients"]][2,4])
 
+all %>% filter(month == 10, year == 2023)
+
 droughts <- data.frame(x1 = c(1997,2009,2015,2023) + 0.5/12,
                        x2 = c(1998,2010,2016,2023) +
                          11.5/12)
@@ -124,11 +126,11 @@ B %>%
 
 (all %>%
   filter(source == "RS",
-         month == 10,
          pred.m <= (A %>%
                       filter(source == "RS",
                              month == 10) %>%
-                      pull(mean2023) %>% min())))
+                      pull(mean2023) %>% min()))) %>%
+  arrange(desc(year),desc(month))
 
 all %>%
   group_by(source) %>%

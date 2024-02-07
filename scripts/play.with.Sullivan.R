@@ -1,5 +1,8 @@
 rm(list = ls())
 
+library(dplyr)
+library(ggplot2)
+
 dat <- read.csv("/home/femeunier/Documents/projects/Congo.ED2/data/Sullivan/MultiCensusPlots.csv",header=T,as.is=T) %>%
   mutate(AGB = AGB*0.456,
          AGWP = AGWP*0.456) %>%
@@ -11,6 +14,18 @@ dat <- read.csv("/home/femeunier/Documents/projects/Congo.ED2/data/Sullivan/Mult
   mutate(WtBRT = Area^(1/9)+MonitorLength^(1/12)-1) %>%
   mutate(CEC = log(CEC))
 
+ggplot(data = dat) +
+  geom_density(aes(x = AGB, fill = Continent)) +
+  theme_bw()
+
+dat %>%
+  group_by(Continent) %>%
+  filter(Long >= 5, Long <= 35) %>%
+  summarise(m = weighted.mean(AGB,WtAGB),
+            N = n(),
+            totarea = sum(Area),
+            mi = min(Long),
+            ma = max(Long))
 
 rf<-randomForest(log(AGB/mean(AGB))~Min.temp+bio5+wind+bio17+Cloud+Clay+CEC+MEM1+MEM2+MEM3+MEM4+MEM5+MEM6+MEM7+MEM8,
                  data=dat,

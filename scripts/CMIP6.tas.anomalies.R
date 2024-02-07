@@ -156,8 +156,12 @@ weights <- CMIP.vs.JRA %>%
             .groups = "keep") %>%
   arrange(RMSE) %>%
   ungroup() %>%
-  slice_head(n = 10)
+  slice_head(n = 10) %>%
+  mutate(w = 1/bias**2) %>%
+  mutate(w = w/sum(w)) %>%
+  arrange(model)
 
+sum(round(weights$w, digits = 2))
 ggplot() +
   geom_line(data = data.mod.anomalies %>%
               filter(scenario == "historical",
