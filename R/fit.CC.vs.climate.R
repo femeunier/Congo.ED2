@@ -147,8 +147,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     mutate(id = 1:n())
 
   cccdf <- ccdf %>%
-    dplyr::select(-c(time,continent,model.lat.lon,
-                     any_of(c("gpp","npp","nep","ra","rh","nbp")))) %>%
+    dplyr::select(-c(any_of(c("time","continent","model.lat.lon","model.lon.lat",
+                              "gpp","npp","nep","ra","rh","nbp")))) %>%
     dplyr::select(
       where(
         ~!all((.x == mean(.x,na.rm = TRUE)))

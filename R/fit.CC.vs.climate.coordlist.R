@@ -130,7 +130,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     mutate(id = 1:n())
 
   cccdf <- ccdf %>%
-    dplyr::select(-any_of(c("time","continent","model.lat.lon",
+    dplyr::select(-any_of(c("time","continent","model.lat.lon","model.lon.lat",
                             "gpp","npp","nep","ra","rh","nbp"))) %>%
     dplyr::select(
       where(
