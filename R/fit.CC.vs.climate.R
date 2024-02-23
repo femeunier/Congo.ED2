@@ -12,6 +12,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               CC.suffix = "CC.pantropical.v11",
                               climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
+
   if (continents == ""){
     continents <- c("Africa","America","Australasia")
   }

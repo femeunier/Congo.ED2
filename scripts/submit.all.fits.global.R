@@ -75,7 +75,7 @@ for (irow in seq(1,nrow(grid))){
     frac.train = 0.6,
     overwrite = overwrite,
     transition.suffix = transition.suffix,
-    CC.sufix = "CC.global.v11")
+    CC.suffix = "CC.global.v11")
 
 
   # Create job file
