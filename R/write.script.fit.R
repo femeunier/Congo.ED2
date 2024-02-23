@@ -51,7 +51,7 @@ write.script.fit <- function(file = "script.R",
 
   write("fit.CC.vs.climate(model,scenario,
         vars,biome.names,continents,xgb.model.prefix,grid.suffix,
-        frac.train,biome.file,overwrite,transition.suffix,climate.vars,CC.suffix)",
+        frac.train,biome.file,overwrite,transition.suffix,CC.suffix,climate.vars)",
         file=file,append=TRUE)
 }
 
