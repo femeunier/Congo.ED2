@@ -1,7 +1,7 @@
 
 fit.CC.vs.climate <- function(model = "CABLE-POP",
                               scenario = "S2",
-                              vars = c("gpp","npp","nep","ra","rh"),
+                              vars = c("gpp","npp","nep","ra","rh","nbp"),
                               biome.names = c("Tropical seasonal forest/savanna"),
                               continents = c("Africa"),
                               xgb.model.prefix = "xgb.model",
@@ -53,6 +53,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     mutate(continent = Congo.ED2::coord2continent(lon,lon)) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
     filter(continent %in% continents)
+
+  existing.vars <- intersect(vars,colnames(CC.Trendy))
 
   # Merge
 
@@ -131,12 +133,11 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       subsample = 1 # subsample ratio of the training instances
     ))
 
-  sink.vs.climate <- sink.vs.climate %>%
-    mutate(gpp = gpp*86400*365,
-           ra = ra*86400*365,
-           rh = rh*86400*365,
-           npp = npp*86400*365,
-           nep = nep*86400*365)
+  for (cvar in existing.vars){
+    sink.vs.climate[[cvar]] <- sink.vs.climate[[cvar]]*86400*365
+  }
+
+
 
   ccdf <- sink.vs.climate %>%
     ungroup() %>%
@@ -148,7 +149,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
   cccdf <- ccdf %>%
     dplyr::select(-c(time,continent,model.lat.lon,
-                     gpp,npp,nep,ra,rh)) %>%
+                     any_of(c("gpp","npp","nep","ra","rh","nbp")))) %>%
     dplyr::select(
       where(
         ~!all((.x == mean(.x,na.rm = TRUE)))

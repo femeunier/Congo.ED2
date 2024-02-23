@@ -74,7 +74,8 @@ for (irow in seq(1,nrow(grid))){
     biome.file = biome.file,
     frac.train = 0.6,
     overwrite = overwrite,
-    transition.suffix = transition.suffix)
+    transition.suffix = transition.suffix,
+    CC.sufix = "CC.global.v11")
 
 
   # Create job file
