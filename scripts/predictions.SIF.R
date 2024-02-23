@@ -7,8 +7,8 @@ library(ggthemes)
 library(sf)
 library(zoo)
 
-products <- c("SIF","SIF2","VOD")
-products <- c("SIF","SIF2","VOD",
+# products <- c("SIF","SIF2","VOD","NIR")
+products <- c("SIF","SIF2","VOD","NIR",
               "Madani","Zhang","Fluxcom","MODIS")
 
 df.all <- bind_rows(list(readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
@@ -19,6 +19,10 @@ df.all <- bind_rows(list(readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
                          readRDS("./data/GPP/monthly/all.df.GPP.RDS") %>%
                            mutate(product = "Zhang") %>%
                            rename(value = daily.GPP) %>%
+                           ungroup(),
+
+                         readRDS("./data/GPP/monthly/NIR.GPP.RDS") %>%
+                           mutate(product = "NIR") %>%
                            ungroup(),
 
                          readRDS("./data/GPP/monthly/df.all.GPP3.RDS") %>%

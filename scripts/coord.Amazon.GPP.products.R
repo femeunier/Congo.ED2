@@ -15,6 +15,13 @@ df.all <- bind_rows(list(readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
                            ungroup() %>%
                            filter(year == min(year)),
 
+                         readRDS("./data/GPP/monthly/NIR.GPP.RDS") %>%
+                           mutate(model = "NIR") %>%
+                           rename(daily.GPP = value) %>%
+                           ungroup() %>%
+                           filter(year == min(year),
+                                  month == min(month)),
+
                          readRDS("./data/GPP/monthly/all.df.GPP.RDS") %>%
                            mutate(model = "Zhang") %>%
                            ungroup() %>%
@@ -53,6 +60,13 @@ df.all <- bind_rows(list(readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
                            ungroup() %>%
                            filter(year == min(year))  %>%
                            filter(month == min(month))))
+
+ggplot(data = df.all %>%
+         filter(model %in% c("SIF","NIR"))) +
+  geom_density(aes(x = daily.GPP,
+                   fill = model),
+               alpha = 0.5) +
+  theme_bw()
 
 Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
                       layer = "amazon_sensulatissimo_gmm_v1")

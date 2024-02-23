@@ -78,7 +78,7 @@ A.MEM.dt.sum <- A.MEM.dt %>%
 
 B <- readRDS("./outputs/all.predictions.SIF.ILF.RDS") %>%
   filter(year >= 1994) %>%
-  filter(product %in% c("SIF","SIF2","VOD"))
+  filter(product %in% c("SIF","SIF2","VOD","NIR"))
 
 B.MEM <- B %>%
   group_by(year, month, lat, lon) %>%

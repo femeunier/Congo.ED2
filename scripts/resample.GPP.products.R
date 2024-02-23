@@ -26,6 +26,10 @@ df.all <- bind_rows(list(readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
                            mutate(model = "SIF") %>%
                            rename(daily.GPP = value),
 
+                         readRDS("./data/GPP/monthly/NIR.GPP.RDS") %>%
+                           mutate(model = "NIR") %>%
+                           rename(daily.GPP = value),
+
                          readRDS("./data/GPP/monthly/SIF.GPP2.RDS") %>%
                            mutate(model = "SIF2") %>%
                            rename(daily.GPP = value),

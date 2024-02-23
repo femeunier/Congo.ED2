@@ -10,6 +10,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
                               biome.file = "/data/gent/vo/000/gvo00074/felicien/R/outputs/biome.CRUJRA.1901.2022.AI.RDS",
                               overwrite = TRUE,
                               transition.suffix = "transitions",
+                              CC.suffix = "pantropical.v11",
                               climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
   if (continents == ""){
@@ -20,7 +21,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
   grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,grid.suffix,".RDS")
-  model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",model,".",scenario,".CC.pantropical.v11.RDS")
+  model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",model,".",scenario,".CC.",CC.suffix,".RDS")
 
   if (scenario == "S3"){
     grid.file.transition <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,".",transition.suffix,".RDS")
@@ -61,7 +62,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
            lon = round(lon,digits = 2))
 
   # CO2
-  dataC02 <- read.table("./data/global_co2_ann_1700_2022.txt",
+  dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/global_co2_ann_1700_2022.txt",
                         stringsAsFactors = FALSE) %>%
     rename(year = V1,
            CO2 = V2)
@@ -139,6 +140,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
 
   ccdf <- sink.vs.climate %>%
     ungroup() %>%
+    mutate(lat = round(lat,digits = 2),
+           lon = round(lon,digits = 2)) %>%
     mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
     filter(model.lat.lon %in% TF[["model.lat.lon"]]) %>%
     mutate(id = 1:n())

@@ -7,8 +7,7 @@ library(ggthemes)
 library(sf)
 library(zoo)
 
-products <- c("SIF","SIF2","VOD",
-              "Madani","Zhang","Fluxcom","MODIS")
+products <- c("NIR")
 
 
 df.all <- bind_rows(list(readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
@@ -16,29 +15,33 @@ df.all <- bind_rows(list(readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
                            rename(value = daily.GPP) %>%
                            ungroup(),
 
-                         readRDS("./data/GPP/monthly/all.df.GPP.RDS") %>%
-                           mutate(product = "Zhang") %>%
-                           rename(value = daily.GPP) %>%
+                         # readRDS("./data/GPP/monthly/all.df.GPP.RDS") %>%
+                         #   mutate(product = "Zhang") %>%
+                         #   rename(value = daily.GPP) %>%
+                         #   ungroup(),
+
+                         readRDS("./data/GPP/monthly/NIR.GPP.RDS") %>%
+                           mutate(product = "NIR") %>%
                            ungroup(),
 
-                         readRDS("./data/GPP/monthly/df.all.GPP3.RDS") %>%
-                           mutate(product = "Fluxcom") %>%
-                           dplyr::select(-value) %>%
-                           rename(value = daily.GPP) %>%
-                           ungroup(),
-
-                         readRDS("./data/GPP/monthly/all.df.GPP.MODIS.RDS") %>%
-                           mutate(product = "MODIS") %>%
-                           rename(value = daily.GPP) %>%
-                           ungroup(),
-
-                         readRDS("./data/GPP/monthly/SIF.GPP2.RDS") %>%
-                           mutate(product = "SIF2") %>%
-                           ungroup(),
-
-                         readRDS("./data/GPP/monthly/SIF.GPP.RDS") %>%
-                           mutate(product = "SIF") %>%
-                           ungroup(),
+                         # readRDS("./data/GPP/monthly/df.all.GPP3.RDS") %>%
+                         #   mutate(product = "Fluxcom") %>%
+                         #   dplyr::select(-value) %>%
+                         #   rename(value = daily.GPP) %>%
+                         #   ungroup(),
+                         #
+                         # readRDS("./data/GPP/monthly/all.df.GPP.MODIS.RDS") %>%
+                         #   mutate(product = "MODIS") %>%
+                         #   rename(value = daily.GPP) %>%
+                         #   ungroup(),
+                         #
+                         # readRDS("./data/GPP/monthly/SIF.GPP2.RDS") %>%
+                         #   mutate(product = "SIF2") %>%
+                         #   ungroup(),
+                         #
+                         # readRDS("./data/GPP/monthly/SIF.GPP.RDS") %>%
+                         #   mutate(product = "SIF") %>%
+                         #   ungroup(),
 
                          readRDS("./data/GPP/monthly/VOD.GPP.RDS") %>%
                            mutate(product = "VOD") %>%

@@ -107,7 +107,7 @@ Trendy.data %>%
 ################################################################################
 
 RS.data <- readRDS("./outputs/test.predictions.SIF.ILF.RDS") %>%
-  filter(product %in% c("SIF","SIF2","VOD"))
+  filter(product %in% c("SIF","SIF2","VOD","NIR"))
 
 palette <- kelly(n=17)[2:17]
 

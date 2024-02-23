@@ -15,7 +15,7 @@ palette <- c(kelly(n=17)[2:17])
 
 ################################################################################
 
-GPPproducts2keep <- c("VOD","SIF","SIF2")
+GPPproducts2keep <- c("VOD","SIF","SIF2","NIR")
 
 RS.data <- bind_rows(readRDS("./outputs/GPP.products.Amazon.ILF.sum.RDS")) %>%
   filter(model %in% GPPproducts2keep) %>%

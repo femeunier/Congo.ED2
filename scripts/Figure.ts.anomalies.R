@@ -237,6 +237,8 @@ ggplot(data = all.wide,
               color = "black") +
   theme_bw() +
   labs(x = "",y = "") +
+  scale_x_continuous(breaks = c(3,3.1,3.2)) +
+  scale_y_continuous(breaks = c(2.9,3,3.1,3.2)) +
   theme(text = element_text(size = 24))
 
 summary(lm(data = all.wide,

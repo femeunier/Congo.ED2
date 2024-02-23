@@ -10,7 +10,8 @@ Window = 6
 
 df.all.pred.sum <- readRDS("./outputs/all.predictions.SIF.sum.ILF.RDS") %>%
   filter(year >= 1994) %>%
-  filter(product %in% c("SIF","SIF2","VOD"))
+  filter(product %in% c("SIF","SIF2",
+                        "VOD","NIR"))
 
 df.all.pred.sum %>%
   group_by(product) %>%
