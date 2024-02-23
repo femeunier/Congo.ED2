@@ -64,7 +64,7 @@ for (irow in seq(1,nrow(grid))){
     scenario = crow[["scenario"]],
     vars = all.vars,
     biome.names = crow[["biome"]],
-    continents = ,
+    continents = "",
     xgb.model.prefix = gsub("\\/","",gsub(" ","",
                                           paste0(prefix,
                                                  crow[["model"]],".",
