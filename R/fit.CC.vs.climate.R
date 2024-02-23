@@ -1,4 +1,3 @@
-
 fit.CC.vs.climate <- function(model = "CABLE-POP",
                               scenario = "S2",
                               vars = c("gpp","npp","nep","ra","rh","nbp"),

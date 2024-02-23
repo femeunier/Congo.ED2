@@ -1,6 +1,6 @@
 fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                                         scenario = "S2",
-                                        vars = c("gpp","npp","nep","ra","rh"),
+                                        vars = c("gpp","npp","nep","ra","rh","nbp"),
                                         coord.list = "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/Amazon.coord.ILF.RDS",
                                         xgb.model.prefix = "xgb.model",
                                         grid.suffix = "",
@@ -45,6 +45,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
   }
 
   CC.Trendy <- all.models
+  existing.vars <- intersect(vars,colnames(CC.Trendy))
 
   # Merge
 
@@ -118,12 +119,9 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       subsample = 1 # subsample ratio of the training instances
     ))
 
-  sink.vs.climate <- sink.vs.climate %>%
-    mutate(gpp = gpp*86400*365,
-           ra = ra*86400*365,
-           rh = rh*86400*365,
-           npp = npp*86400*365,
-           nep = nep*86400*365)
+  for (cvar in existing.vars){
+    sink.vs.climate[[cvar]] <- sink.vs.climate[[cvar]]*86400*365
+  }
 
   ccdf <- sink.vs.climate %>%
     ungroup() %>%
@@ -132,8 +130,8 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     mutate(id = 1:n())
 
   cccdf <- ccdf %>%
-    dplyr::select(-c(time,model.lon.lat,
-                     gpp,npp,nep,ra,rh)) %>%
+    dplyr::select(-c(time,continent,model.lat.lon,
+                     any_of(c("gpp","npp","nep","ra","rh","nbp")))) %>%
     dplyr::select(
       where(
         ~!all((.x == mean(.x,na.rm = TRUE)))
