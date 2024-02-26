@@ -17,7 +17,7 @@ coord.list <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",
                           round(lat,digits = 2)))
 
-A <- readRDS("./outputs/Trendy.data.rspld.pred.RDS") %>%
+A <- readRDS("./outputs/Trendy.data.rspld.ERA5.pred.RDS") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",
                           round(lat,digits = 2))) %>%
   filter(lon.lat %in% coord.list[["lon.lat"]])

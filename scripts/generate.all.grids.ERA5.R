@@ -34,7 +34,7 @@ for (cmodel in models){
 
   if (!file.exists(model.file)) next()
 
-  OPfile <- paste0("./data/grid.ERA5.",cmodel,".RDS")
+  OPfile <- paste0("./data/grid.",cmodel,".ERA5.RDS")
 
   if (file.exists(OPfile) & !overwrite){next()}
 

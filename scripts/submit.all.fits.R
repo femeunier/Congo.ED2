@@ -16,7 +16,7 @@ prefix <- "XGB.fit.JRA.historical."
 GridSuffix = ".JRA.historical"
 transition.suffix <- "transitions_reclass"
 continents <- c("America","Africa","Australasia")
-all.vars <- c("nbp")
+all.vars <- c("gpp","npp","nep")
 biome.names <- c("Humid_large",
                  "Humid_low",
                  "Humid_seasonal",

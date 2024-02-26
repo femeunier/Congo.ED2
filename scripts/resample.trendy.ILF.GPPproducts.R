@@ -4,16 +4,14 @@ library(dplyr)
 library(TrENDY.analyses)
 library(raster)
 
-# files <- c("GPP.products.Amazon.ILF.RDS",
-#            "GPP.products.Congo.ILF.RDS",
-#            "Amazon.mean.JRA.historical.IFL.RDS",
-#            "Congo.mean.JRA.historical.IFL.RDS")
-#
-# for (cfile in files){
-#   system2("scp",
-#           c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
-#             "./outputs/"))
-# }
+files <- c("GPP.products.Amazon.ILF.RDS",
+           "Amazon.mean.ERA5.IFL.RDS")
+
+for (cfile in files){
+  system2("scp",
+          c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
+            "./outputs/"))
+}
 
 ################################################################################
 
@@ -29,10 +27,8 @@ rast <- rasterFromXYZ((grid %>%
 
 years <- 1992:2023
 
-Trendy.data <-  bind_rows(readRDS("./outputs/Amazon.mean.JRA.historical.IFL.RDS") %>%
-                            mutate(basin = "Amazon"),
-                          readRDS("./outputs/Congo.mean.JRA.historical.IFL.RDS") %>%
-                            mutate(basin = "Congo")) %>%
+Trendy.data <-  bind_rows(readRDS("./outputs/Amazon.mean.ERA5.IFL.RDS") %>%
+                            mutate(basin = "Amazon")) %>%
   dplyr::select(-c(xgb.model,model.lon.lat)) %>%
   filter(year %in% years,
          var == "gpp")
@@ -62,7 +58,7 @@ for (cmodel in models){
 }
 
 saveRDS(Trendy.data.rspld,
-        "./outputs/Trendy.data.rspld.pred.RDS")
+        "./outputs/Trendy.data.rspld.ERA5.pred.RDS")
 
 
 # ################################################################################

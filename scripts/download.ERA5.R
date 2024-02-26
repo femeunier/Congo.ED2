@@ -18,7 +18,7 @@ plan(multiprocess)
 files.already.dow <- tools::file_path_sans_ext(list.files(
   getwd()))
 yrs <- as.numeric(sub(".*\\_","",files.already.dow))
-years <- 1940:2023
+years <- 2023:2023
 # years <- years[!(years %in% yrs)]
 
 c(years) %>%

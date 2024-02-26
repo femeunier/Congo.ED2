@@ -8,6 +8,7 @@ write.script.fit.coordlist <- function(file = "script.R",
                                        frac.train = 0.6,
                                        overwrite = TRUE,
                                        transition.suffix = NULL,
+                                       CC.suffix = "CC.pantropical.v11",
                                        climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
   writeLines("rm(list = ls())",con = file)
@@ -41,11 +42,14 @@ write.script.fit.coordlist <- function(file = "script.R",
   write(paste0("climate.vars <- c('",paste0(climate.vars,collapse = "', '"),"')"),
         file=file,append=TRUE)
 
+  write(paste0("CC.suffix <- \"",CC.suffix,"\""),
+        file=file,append=TRUE)
+
   write("",file=file,append=TRUE)
 
   write("fit.CC.vs.climate.coordlist(model,scenario,
         vars,coord.list,xgb.model.prefix,grid.suffix,
-        frac.train,overwrite,transition.suffix,climate.vars)",
+        frac.train,overwrite,transition.suffix,CC.suffix,climate.vars)",
         file=file,append=TRUE)
 }
 

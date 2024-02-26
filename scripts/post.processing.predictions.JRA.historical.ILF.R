@@ -10,6 +10,7 @@ models <- TrENDY.analyses::get.model.names.TRENDY()
 
 df.all.ts <- df.all.year <-
   predictions.Amazon <- predictions.Congo <-
+  predictions.Amazon.test <- predictions.Congo.test <-
   predictions.Amazon.sum <- predictions.Congo.sum <-
   df.all.ts.MEM <- df.all.year.MEM <-
   all.predictions <-

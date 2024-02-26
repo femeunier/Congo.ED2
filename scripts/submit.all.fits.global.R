@@ -80,7 +80,7 @@ for (irow in seq(1,nrow(grid))){
 
   # Create job file
   ED2scenarios::write_jobR(file = file.path(cdir,jobname),
-                           nodes = 1,ppn = 16,mem = 64,walltime = 72,
+                           nodes = 1,ppn = 16,mem = 124,walltime = 72,
                            prerun = "ml purge ; ml R-bundle-Bioconductor/3.15-foss-2021b-R-4.2.0",
                            CD = "/data/gent/vo/000/gvo00074/felicien/R/",
                            Rscript = Rscript.name)

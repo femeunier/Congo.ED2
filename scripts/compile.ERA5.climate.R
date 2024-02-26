@@ -5,16 +5,21 @@ library(reshape2)
 library(dplyr)
 library(lubridate)
 
-dir <- "/data/gent/vo/000/gvo00074/ED_common_data/met/CB/"
+dir <- "/data/gent/vo/000/gvo00074/ED_common_data/met/Tropics/"
 
 all.df.years <- data.frame()
+all.df.years <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
+  filter(year != 2023)
+print(unique(all.df.years$year))
+print(summary(all.df.years$lat))
+print(summary(all.df.years$lon))
 
 vars <- c("t2m","ssrd","tp","strd","d2m")
-for (cyear in 2000:2001){
+for (cyear in 2023:2023){
 
   print(cyear)
 
-  ncfile <- file.path(dir,paste0("ERA5_",cyear,".nc"))
+  ncfile <- file.path(dir,paste0("ERA5_Tropics_",cyear,".nc"))
   nc <- nc_open(ncfile)
   lons <- ncvar_get(nc,"longitude")
   lats <- ncvar_get(nc,"latitude")
@@ -93,3 +98,6 @@ for (cyear in 2000:2001){
 
 saveRDS(all.df.years,
         "./outputs/monthly.climate.pantropical.ERA5.RDS")
+
+# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/compile.ERA5.climate.R hpc:/data/gent/vo/000/gvo00074/felicien/R/
+

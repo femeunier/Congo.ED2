@@ -8,10 +8,10 @@ library(dismo)
 library(tie)
 
 coord <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
-  filter(model == "ORCHIDEE") %>%
+  # filter(model == "ORCHIDEE") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2)))
 
-climate <- readRDS("./outputs/monthly.climate.pantropical.JRA.historical.RDS") %>%
+climate <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
   filter(year >= 1994) %>%
   mutate(tmp = tmp -273.15,
          tmin = tmin -273.15,

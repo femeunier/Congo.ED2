@@ -7,6 +7,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                                         frac.train = 0.6,
                                         overwrite = TRUE,
                                         transition.suffix = "transitions",
+                                        CC.suffix = "CC.pantropical.v11",
                                         climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
   if (!file.exists(coord.list)){
@@ -16,7 +17,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
   }
 
   grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,grid.suffix,".RDS")
-  model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",model,".",scenario,".CC.pantropical.v11.RDS")
+  model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",model,".",scenario,".",CC.suffix,".RDS")
 
   if (scenario == "S3"){
     grid.file.transition <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,".",transition.suffix,".RDS")

@@ -9,7 +9,7 @@ RS <- readRDS("./outputs/RSanomalies.RDS") %>%
   dplyr::select(year,month,pred.m,anomaly,anomaly.m,mean.pred) %>%
   mutate(source = "RS")
 
-Trendy <- readRDS("./outputs/Trendy.data.rspld.pred.RDS") %>%
+Trendy <- readRDS("./outputs/Trendy.data.rspld.ERA5.pred.RDS") %>%
   filter(year >= 1994) %>%
   group_by(model,year,month) %>%
   summarise(pred.m = mean(pred),
@@ -92,6 +92,7 @@ ggplot() +
   scale_color_manual(values = c("darkblue","black")) +
   labs(x = "",y = "", color = "") +
   scale_y_continuous(limits = c(2.5,3.5)) +
+  # scale_x_continuous(limits = c(2023,2024)) +
   guides(color = FALSE) +
   theme_bw() +
   theme(text = element_text(size = 20))
