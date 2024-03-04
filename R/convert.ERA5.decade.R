@@ -17,6 +17,9 @@ convert.ERA5.decade <- function(decade){
   for (cyear in years2change){
 
     ncfile <- file.path(dir,paste0("ERA5_Tropics_",cyear,".nc"))
+
+    if (!file.exists(ncfile)) next()
+
     nc <- nc_open(ncfile)
     lons <- ncvar_get(nc,"longitude")
     lats <- ncvar_get(nc,"latitude")
