@@ -13,7 +13,7 @@ library(randomForest)
 library(ggpointdensity)
 
 models <- TrENDY.analyses::get.model.names.TRENDY()
-models <- models[seq(length(models),1,-1)]
+# models <- models[seq(length(models),1,-1)]
 
 # options(warn = 0)
 
@@ -24,6 +24,7 @@ Var.names <- CN[!(CN %in% c("lat","lon","year","month"))]
 all.grids <- data.frame()
 
 overwrite = TRUE
+years2replace <- 2023:2024
 for (cmodel in models){
 
   model.file <- paste0("./outputs/Trendy.",cmodel,".S2.CC.pantropical.v11.RDS")
@@ -57,9 +58,10 @@ for (cmodel in models){
 
   cdf <- Biomass.Trendy
 
-  cgrid <- data.frame()
+  cgrid <- readRDS(OPfile) %>%
+    filter(!(year %in% years2replace))
 
-  for (cyear in sort(unique(Tropics.sum$year))){
+  for (cyear in years2replace){
 
     print(paste0(cmodel," - ",cyear))
 
@@ -75,9 +77,9 @@ for (cmodel in models){
                                 var.names = Var.names,
                                 NULL)
 
-    cgrid <- bind_rowd(cgrid,
+    cgrid <- bind_rows(cgrid,
                        test %>%
-      mutate(model = cmodel))
+                         mutate(model = cmodel))
   }
 
 
@@ -85,4 +87,4 @@ for (cmodel in models){
           OPfile)
 }
 
-# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/generate.all.grids.ERA5.R hpc:/data/gent/vo/000/gvo00074/felicien/R/
+# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/update.all.grids.ERA5.R hpc:/data/gent/vo/000/gvo00074/felicien/R/

@@ -9,15 +9,16 @@ files <- c("GPP.products.Amazon.ILF.RDS",
            "Amazon.mean.ERA5.IFL.RDS")
 
 for (cfile in files){
-  system2("scp",
-          c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
+  system2("rsync",
+          c("-avz",
+            paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
             "./outputs/"))
 }
 
 ################################################################################
 
-grid <- readRDS("./data/GPP/monthly/SIF.GPP.RDS") %>%
-  rename(daily.GPP = value) %>%
+grid <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
+  rename(daily.GPP = VPD) %>%
   filter(year == year[1],
          month == month[1]) %>%
   dplyr::select(lon,lat,daily.GPP)
@@ -45,7 +46,7 @@ ggplot(data = Trendy.data.sum %>%
   geom_line(aes(x = year + (month - 1/2)/12,
                 y = obs.m)) +
   geom_point(aes(x = year + (month - 1/2)/12,
-                y = pred.m), linetype = 2) +
+                 y = pred.m), linetype = 2) +
   theme_bw() +
   scale_x_continuous(limits = c(2019,2025))
 
@@ -68,10 +69,10 @@ for (cmodel in models){
                                     resample.df.all.col(bigdf = ctrendy.data %>%
                                                           filter(year == cyear),
 
-                                              raster2resample = rast,
-                                              var.names = c("pred"),
-                                              res = 0.00001) %>%
-      filter(!is.na(pred)))
+                                                        raster2resample = rast,
+                                                        var.names = c("pred"),
+                                                        res = 0.00001) %>%
+                                      filter(!is.na(pred)))
   }
 
 
@@ -82,7 +83,7 @@ for (cmodel in models){
 }
 
 saveRDS(Trendy.data.rspld,
-        "./outputs/Trendy.data.rspld.pred.RDS")
+        "./outputs/Trendy.data.rspld.ERA5.pred.RDS")
 
 
 # ################################################################################

@@ -5,7 +5,10 @@ library(dplyr)
 library(ggplot2)
 library(zoo)
 
-RS <- readRDS("./outputs/RSanomalies.RDS") %>%
+
+Window = 6
+
+RS <- readRDS("./outputs/RSanomalies.ERA5.RDS") %>%
   dplyr::select(year,month,pred.m,anomaly,anomaly.m,mean.pred) %>%
   mutate(source = "RS")
 
@@ -34,7 +37,6 @@ Trendy <- readRDS("./outputs/Trendy.data.rspld.ERA5.pred.RDS") %>%
   dplyr::select(year,month,pred.m,anomaly,anomaly.m,mean.pred) %>%
   mutate(source = "Trendy")
 
-Window = 6
 
 all <- bind_rows(RS,
                  Trendy) %>%
@@ -55,11 +57,14 @@ all %>%
   summarise(r2 = summary(lm(formula = pred.m ~ time))[["r.squared"]],
             pval = summary(lm(formula = pred.m ~ time))[["coefficients"]][2,4])
 
-all %>% filter(month == 10, year == 2023)
 
-droughts <- data.frame(x1 = c(1997,2009,2015,2023) + 0.5/12,
-                       x2 = c(1998,2010,2016,2023) +
-                         11.5/12)
+
+droughts <- data.frame(x1 = c(1997 + 9/12,
+                              2015 + 8/12,
+                              2023 + 7/12) + 0.5/12,
+                       x2 = c(1998 + 4/12 ,
+                              2016 + 3/12,
+                              2024 + 2/12) + 0.5/12)
 
 ggplot() +
 
@@ -274,4 +279,4 @@ ggplot(data = all.sum) +
 
 
 saveRDS(all,
-        "./outputs/GPP.anomalies.RDS")
+        "./outputs/GPP.anomalies.ERA5.RDS")

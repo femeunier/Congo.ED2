@@ -112,11 +112,18 @@ ggplot(data = data.mod.anomalies.sum) +
   theme_bw()
 
 
-coord <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
-  filter(model == "ORCHIDEE") %>%
+# coord <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
+#   filter(model == "ORCHIDEE") %>%
+#   mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2)))
+#
+# climate <- readRDS("./outputs/monthly.climate.pantropical.JRA.historical.RDS") %>%
+#   filter(year >= 1985)
+
+coord <- readRDS("./outputs/Coord.ILF.ERA5.RDS") %>%
+  # filter(model == "ORCHIDEE") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2)))
 
-climate <- readRDS("./outputs/monthly.climate.pantropical.JRA.historical.RDS") %>%
+climate <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
   filter(year >= 1985)
 
 climate.select <- climate %>%
@@ -165,7 +172,7 @@ sum(round(weights$w, digits = 2))
 ggplot() +
   geom_line(data = data.mod.anomalies %>%
               filter(scenario == "historical",
-                     model == 'MRI-ESM2-0'),
+                     model == weights %>% filter(w == max(w)) %>% pull(model)),
             aes(x = year + (month - 1/2)/12,
                 y = tas.m),
             color = "red") +
@@ -178,7 +185,7 @@ ggplot() +
 ggplot() +
   geom_line(data = data.mod.anomalies %>%
               filter(scenario == "historical",
-                     model == 'MRI-ESM2-0') %>%
+                     model == weights %>% filter(w == max(w)) %>% pull(model)) %>%
               group_by(year) %>%
               summarise(tas.m = mean(tas.m)),
             aes(x = year,
@@ -328,28 +335,32 @@ all2plot <- bind_rows(data.mod.anomalies.sum %>%
                       data %>%
                         filter(year >= 1994) %>%
                         # filter(year <= 2014) %>%
-                        mutate(scenario = "JRA")) %>%
+                        mutate(scenario = "ERA5")) %>%
   mutate(scenario = factor(scenario,
                            levels = c("ssp585","ssp370","ssp245","ssp126",
-                                      "historical","JRA")))
+                                      "historical","ERA5")))
 
 ggplot(data = all2plot) +
+
 
   geom_boxplot(aes(y = anomaly.month.rm,
                    x = scenario,
                    fill = scenario),
                alpha = 0.7) +
+  geom_point(data = all2plot %>%
+               filter((year == 2023 & month > 6) |
+                        (year == 2024),
+                      scenario == "ERA5"),
+             aes(y = anomaly.month.rm,
+                 x = scenario),
+             color = "red") +
 
   geom_vline(xintercept = 0, linetype = 2) +
   # facet_wrap(~ scenario) +
   labs(x = "",y = "") +
   scale_fill_manual(values = c("#6a2d31","#b48a40","#8b9bac","#263b5d","grey","black"))+
   geom_hline(linetype = 2,yintercept = 0) +
-  scale_y_continuous(position = "right",
-                     breaks = (-1:5)*0.5,
-                     sec.axis = sec_axis(~ . * 1,
-                                         breaks = (-1:5)*0.5,
-                                         labels = c("","","","","","",""))) +
+  scale_y_continuous(breaks = (-1:5)*0.5) +
   coord_flip() +
   # scale_y_continuous() +
   guides(fill = "none") +
@@ -375,7 +386,7 @@ all2plot %>%
             Q3 = unique(Q3))
 
 all2plot %>%
-  filter(scenario == "JRA",
+  filter(scenario == "ERA5",
          anomaly.month.rm >= 0.74) %>%
   arrange(desc(anomaly.month.rm))
 
@@ -399,10 +410,10 @@ all2plot2 <- bind_rows(data.mod.anomalies.sum %>%
                                  (scenario != "historical" & year %in% c(2071:2100))) ,
                       data %>%
                         filter(year >= 1994) %>%
-                        mutate(scenario = "JRA")) %>%
+                        mutate(scenario = "ERA5")) %>%
   mutate(scenario = factor(scenario,
                            levels = c("ssp585","ssp370","ssp245","ssp126",
-                                      "historical","JRA")))
+                                      "historical","ERA5")))
 
 ggplot(data = all2plot2) +
 
@@ -429,3 +440,4 @@ ggplot(data = all2plot2) +
 
   theme_bw() +
   theme(text = element_text(size = 20))
+

@@ -5,10 +5,10 @@ library(ggplot2)
 library(pals)
 library(cowplot)
 
-system2("rsync",
-        c("-avz",
-          "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/Amazon.mean.test.ERA5.IFL.RDS",
-          "./outputs/"))
+# system2("rsync",
+#         c("-avz",
+#           "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/Amazon.mean.test.ERA5.IFL.RDS",
+#           "./outputs/"))
 
 ################################################################################
 
@@ -54,7 +54,7 @@ Trendy.data %>%
 
 ################################################################################
 
-RS.data <- readRDS("./outputs/test.predictions.SIF.ILF.RDS") %>%
+RS.data <- readRDS("./outputs/test.predictions.SIF.ILF.ERA5.RDS") %>%
   filter(product %in% c("SIF","SIF2","VOD","NIR"))
 
 palette <- kelly(n=17)[2:17]

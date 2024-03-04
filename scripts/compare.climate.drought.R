@@ -5,14 +5,24 @@ library(ggplot2)
 library(lubridate)
 library(tidyr)
 library(dismo)
+library(ggthemes)
 library(tie)
+library(sf)
 
-coord <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
-  filter(model == "ORCHIDEE") %>%
+coord <- readRDS("./outputs/Coord.ILF.ERA5.RDS") %>%
+  # filter(model == "ORCHIDEE") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2)))
 
 climate <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
   filter(year >= 1994)
+
+ggplot(data = climate %>%
+         filter(lat == 0,
+                lon == -50),
+       aes(x = year + month/12,
+           y = tmax)) +
+  geom_line() +
+  theme_bw()
 
 climate.select <- climate %>%
   mutate(timing = case_when(year %in% c(1992:2020) ~ "original",
@@ -23,16 +33,41 @@ climate.select <- climate %>%
   filter(lon.lat %in% coord[["lon.lat"]]) %>%
   mutate(N = days_in_month(as.Date(paste0(year,"/",sprintf("%20d",month),"/01"))))
 
+
+world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
+Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
+                      layer = "amazon_sensulatissimo_gmm_v1")
+
+
+ggplot(data = climate.select %>%
+         filter(year == 2022, month == 6)) +
+  geom_raster(aes(x=lon,y = lat,
+                  fill = tmin - 273.15),alpha = 1) +
+  geom_sf(data = world,fill = NA, color = "grey") +
+  geom_sf(data = Amazon.shp,fill = NA, color = "black") +
+
+  coord_sf(xlim = c(-85, -30), ylim = c(-25, 10), expand = FALSE) +
+  # scale_fill_gradient2(limits = c(-2,1)*2.5,
+  #                      oob = scales::squish,
+  #                      midpoint = 0,
+  #                      low = "darkred",mid = "grey",high = "darkgreen") +
+  labs(x = "",y = "") +
+  theme_map()
+
+hist(climate.select %>%
+       filter(year == 2023, month == 6) %>% pull(tmin) - 273.15)
+
 climate.sum <- climate.select %>%
   group_by(year,month) %>%
-  summarise(tmp = mean(tmp),
-            spfh = mean(spfh),
-            VPD = mean(VPD),
-            dswrf = mean(dswrf),
-            dlwrf = mean(dlwrf),
-            tmin = mean(tmin),
-            tmax = mean(tmax),
-            pre = mean(pre*N*4),
+  summarise(tmp = mean(tmp,na.rm = TRUE),
+            spfh = mean(spfh,na.rm = TRUE),
+            VPD = mean(VPD,na.rm = TRUE),
+            dswrf = mean(dswrf,na.rm = TRUE),
+            dlwrf = mean(dlwrf,na.rm = TRUE),
+            tmin = mean(tmin,na.rm = TRUE),
+            tmax = mean(tmax,na.rm = TRUE),
+            # pre = mean(pre*N*4,na.rm = TRUE),
+            pre = mean(pre,na.rm = TRUE),
             .groups = "keep") %>%
   pivot_longer(cols = -c(year,month),
                names_to = "variable",
@@ -47,11 +82,14 @@ climate.sum %>%
   arrange(desc(value.m))
 
 ggplot(data = climate.sum %>%
-         filter(variable == "tmp") ) +
+         filter(variable == "tmin") ) +
   geom_line(aes(x = year + (month - 1/2)/12,
-                y = value)) +
+                y = value - 273.15)) +
+  scale_x_continuous(limits = c(2020,2025)) +
   theme_bw()
 
+
+summary(climate.select$tmax)
 
 climate.sum.anomaly <- climate.sum %>%
   mutate(time = year + (month -1/2)/12) %>%
@@ -93,18 +131,18 @@ ggplot() +
             aes(xmin = x1, xmax = x2,
                 ymin = -Inf, ymax = Inf), color = NA,
             alpha = 0.3, fill = "grey") +
-  geom_line(data = climate.sum.anomaly,
+  geom_line(data = climate.sum.anomaly ,
             aes(x = year + (month - 1/2)/12,
                 y = anomaly.m)) +
   facet_wrap(~ variable,scales = "free") +
   scale_x_continuous(limits = c(1990,2024),
                      expand = c(0,0)) +
-  scale_y_continuous(limits = c(-1,1)*3.5) +
+  # scale_y_continuous(limits = c(-1,1)*5) +
   geom_hline(yintercept = 0, linetype = 2, color = "black") +
   theme_bw()
 
 saveRDS(climate.sum.anomaly,
-        "./outputs/climate.anomalies.RDS")
+        "./outputs/climate.anomalies.ERA5.RDS")
 
 # plot(climate.sum.anomaly %>%
 #        # filter(year == 1958) %>%

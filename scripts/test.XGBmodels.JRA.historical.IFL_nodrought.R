@@ -7,10 +7,37 @@ library(raster)
 library(TrENDY.analyses)
 
 models <- TrENDY.analyses::get.model.names.TRENDY()
+scenario <- "S2"
+CC.suffix <- "CC.pantropical.v11"
 
-all.vars <- c("gpp","npp","nep","nbp")
-years <- 1940:2024
-suffixes <- c("IFLAmazon")
+CC.cycles <- data.frame()
+for (cmodel in models){
+  print(cmodel)
+  CC.cycle.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",
+                          cmodel,".",scenario,".",CC.suffix,".RDS")
+  if (!file.exists(CC.cycle.file)) next
+  CC.cycle <- readRDS(CC.cycle.file) %>%
+    filter(year >= 2015)
+    # mutate(timing = case_when(year == 2016 & month %in% c(1:4) ~ "2015",
+    #                           year == 2015 & month %in% c(10:12) ~ "2015",
+    #                           TRUE ~ "other")) %>%
+    # filter(timing != "other") %>%
+    # dplyr::select(-c(timing))
+
+  CC.cycles <- bind_rows(CC.cycles,
+                         CC.cycle %>%
+                           mutate(model = cmodel) %>%
+                           mutate(model.lon.lat = paste0(
+                             model,".",round(lon,digits = 2),
+                             ".", round(lat, digits = 2)
+                           )))
+
+}
+
+
+all.vars <- c("gpp","npp","nep")
+years <- 1958:2023
+suffixes <- c("IFLAmazon_nodrought")
 
 # CO2
 dataC02 <- read.table("./data/global_co2_ann_1700_2022.txt",
@@ -18,12 +45,13 @@ dataC02 <- read.table("./data/global_co2_ann_1700_2022.txt",
   rename(year = V1,
          CO2 = V2)
 
-dataC02.all <- data.frame(year = sort(unique(c(dataC02$year,2020:2024)))) %>%
+dataC02.all <- data.frame(year = sort(unique(c(dataC02$year,2020:2023)))) %>%
   arrange(year) %>%
   left_join(dataC02,
             by = c("year")) %>%
   mutate(CO2 = na.spline(CO2,method = "natural"))
-coord.list <- bind_rows(readRDS("./outputs/Amazon.coord.ILF.RDS"))
+coord.list <- bind_rows(readRDS("./outputs/Amazon.coord.ILF.RDS"),
+                        readRDS("./outputs/Congo.coord.ILF.RDS"))
 
 
 for (csuffix in suffixes){
@@ -34,7 +62,7 @@ for (csuffix in suffixes){
 
     print(cmodel)
 
-    file <- paste0("./data/grid.",cmodel,".ERA5.RDS")
+    file <- paste0("./data/grid.",cmodel,".JRA.historical.RDS")
 
     if (any(!file.exists(file))){
       next()
@@ -44,7 +72,7 @@ for (csuffix in suffixes){
 
     inputs <- climate %>%
       filter(year %in% years) %>%
-      mutate(xgb.model = paste0("XGB.fit.ERA5.",csuffix,".",model,".S2")) %>%
+      mutate(xgb.model = paste0("XGB.fit.JRA.historical.",csuffix,".",model,".S2")) %>%
       left_join(dataC02.all,
                 by = c("year")) %>%
       mutate(model.lon.lat = paste0(model,".",round(lon,digits = 2),".",round(lat,digits = 2))) %>%
@@ -117,6 +145,10 @@ for (csuffix in suffixes){
         left_join(all.data %>%
                     dplyr::select(model.lon.lat,year,month,cvar) %>%
                     rename(obs := !!cvar),
+                  by = c("model.lon.lat","year","month")) %>%
+        left_join(CC.cycles %>%
+                    dplyr::select(model.lon.lat,year,month,cvar) %>%
+                    rename(obs := !!cvar),
                   by = c("model.lon.lat","year","month"))
 
       df.all <- bind_rows(df.all,
@@ -127,12 +159,12 @@ for (csuffix in suffixes){
     }
 
     saveRDS(df.all,
-            paste0("./outputs/predictions.XGB.",cmodel,".ERA5.",csuffix,".RDS"))
+            paste0("./outputs/predictions.XGB.",cmodel,".JRA.historical.",csuffix,".RDS"))
     saveRDS(df.test,
-            paste0("./outputs/predictions.XGB.test.",cmodel,".ERA5.",csuffix,".RDS"))
+            paste0("./outputs/predictions.XGB.test.",cmodel,".JRA.historical.",csuffix,".RDS"))
   }
 }
 
 
-# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/test.XGBmodels.ERA5.IFL.R hpc:/data/gent/vo/000/gvo00074/felicien/R/
+# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/test.XGBmodels.JRA.historical.IFL_nodrought.R hpc:/data/gent/vo/000/gvo00074/felicien/R/
 

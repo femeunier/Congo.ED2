@@ -1,10 +1,17 @@
 rm(list = ls())
 
-system2("scp",
-        c("hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/df.ERA5.RDS",
-          "/home/femeunier/Documents/projects/Congo.ED2/outputs/"))
+# system2("scp",
+#         c("hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/df.ERA5.RDS",
+#           "/home/femeunier/Documents/projects/Congo.ED2/outputs/"))
 
-df.ERA5 <- readRDS("./outputs/df.ERA5.RDS")
+
+coord <- readRDS("./outputs/Coord.ILF.ERA5.RDS")
+df.ERA5 <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
+  mutate(lon.lat = paste0(round(lon,digits = 2),
+                          ".",
+                          round(lat,digits = 2))) %>%
+  filter(lon.lat %in% coord[["lon.lat"]]) %>%
+  mutate(N = days_in_month(as.Date(paste0(year,"/",sprintf("%20d",month),"/01"))))
 
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
@@ -38,7 +45,7 @@ ggplot(data = df.ERA5 %>%
 
 df.ERA5.sum <- df.ERA5 %>%
   group_by(year,month) %>%
-  summarise(pre = mean(MAP),
+  summarise(pre = mean(pre*N)*8,
             tmp = mean(tmp),
             .groups = "keep")
 
@@ -62,16 +69,30 @@ all.wide <- all %>%
   pivot_wider(names_from = "source",
               values_from = "value")
 
+all.wide.groups <- all.wide %>%
+  mutate(timing = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            year == 2016 & month %in% c(1:4) ~ "2015",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
+                            year == 1998 & month %in% 1:5 ~ "1997",
+
+                            TRUE ~ NA)) %>%
+  filter(!is.na(timing))
+
+
 ggplot(data = all.wide,
        aes(x = JRA, y = ERA5)) +
   geom_point(size = 0.5, color = "grey") +
-  geom_point(data = all.wide %>%
-               filter(year == 2023, month %in% c(10)),
-             size = 1, color = "darkblue") +
+  geom_point(data = all.wide.groups,
+             aes(color = timing)) +
   stat_smooth(method = "lm",
               se = FALSE, color = "black") +
   facet_wrap(~ variable,scales = "free") +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
+  scale_color_manual(values = c("#1b9e77","#d95f02","#7570b3")) +
   theme_bw() +
   labs(x = "",y = "") +
   theme(text = element_text(size = 20),
@@ -102,23 +123,38 @@ all.anomalies.wide <- all.anomalies %>%
   pivot_wider(names_from = source,
               values_from = c(value,anomaly,anomaly.m))
 
+
+all.anomalies.wide.groups <- all.anomalies.wide %>%
+  mutate(timing = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            year == 2016 & month %in% c(1:4) ~ "2015",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
+                            year == 1998 & month %in% 1:5 ~ "1997",
+
+                            TRUE ~ NA)) %>%
+  filter(!is.na(timing))
+
 ggplot(data = all.anomalies.wide,
        aes(x = anomaly.m_JRA, y = anomaly.m_ERA5)) +
   geom_point(size = 0.5, color = "grey") +
-  geom_point(data = all.anomalies.wide %>%
-               filter(year == 2023, month %in% c(10)),
-             size = 1, color = "darkblue") +
+  geom_point(data = all.anomalies.wide.groups,
+             aes(color = timing)) +
   stat_smooth(method = "lm",
               se = FALSE, color = "black") +
   facet_wrap(~ variable,scales = "free") +
   geom_hline(yintercept = 0, linetype = 2) +
   geom_vline(xintercept = 0, linetype = 2) +
   geom_abline(slope = 1, intercept = 0, linetype = 2) +
+  scale_color_manual(values = c("#1b9e77","#d95f02","#7570b3")) +
   theme_bw() +
   labs(x = "",y = "") +
   theme(text = element_text(size = 20),
         strip.background = element_blank(),
         strip.text = element_blank())
+
 
 all.anomalies.wide %>%
   group_by(variable) %>%

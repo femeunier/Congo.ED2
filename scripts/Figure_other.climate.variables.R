@@ -7,7 +7,7 @@ library(ggplot2)
 library(corrplot)
 
 Window = 6
-climate.sum.anomaly <- readRDS("./outputs/climate.anomalies.RDS") %>%
+climate.sum.anomaly <- readRDS("./outputs/climate.anomalies.ERA5.RDS") %>%
   group_by(variable) %>%
   mutate(anomaly.month = value - mean.month - mean(value)) %>%
   dplyr::select(-c(time,slope,intercept,mean.obs,

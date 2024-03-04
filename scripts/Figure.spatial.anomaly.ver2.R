@@ -12,8 +12,8 @@ library(zoo)
 library(ggridges)
 library(wesanderson)
 
-coord.list <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
-  filter(model == "ORCHIDEE") %>%
+coord.list <-  readRDS("./outputs/Coord.ILF.ERA5.RDS") %>%
+  # filter(model == "ORCHIDEE") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",
                           round(lat,digits = 2)))
 
@@ -76,7 +76,7 @@ A.MEM.dt.sum <- A.MEM.dt %>%
 
 ################################################################################
 
-B <- readRDS("./outputs/all.predictions.SIF.ILF.RDS") %>%
+B <- readRDS("./outputs/all.predictions.SIF.ILF.ERA5.RDS") %>%
   filter(year >= 1994) %>%
   filter(product %in% c("SIF","SIF2","VOD","NIR"))
 
@@ -89,8 +89,6 @@ B.MEM.ts <- B.MEM %>%
   group_by(year,month) %>%
   summarise(pred.m = mean(pred,na.rm = TRUE),
             .groups = "keep")
-
-
 
 B.MEM.dt <- B.MEM %>%
   filter(year >= 1994) %>%
@@ -114,8 +112,9 @@ all.MEM.dt <- bind_rows(A.MEM.dt %>% mutate(source = "Trendy"),
 map2plot <- all.MEM.dt %>%
   filter(year == 2023,
          month == 10)
+
 ggplot(data = map2plot) +
-  geom_tile(aes(x=lon,y = lat,
+  geom_raster(aes(x=lon,y = lat,
                 fill = anomaly.m),alpha = 1) +
   geom_sf(data = world,fill = NA, color = "grey") +
   geom_sf(data = Amazon.shp,fill = NA, color = "black") +
@@ -132,6 +131,33 @@ ggplot(data = map2plot) +
   theme(text = element_text(size = 20),
         strip.background = element_blank(),
         strip.text = element_blank())
+
+
+map2plot.source <- map2plot %>%
+  dplyr::select(source,lat,lon,anomaly.m) %>%
+  pivot_wider(names_from = source,
+              values_from  = anomaly.m) %>%
+  mutate(diff = RS - Trendy)
+
+
+ggplot(data = map2plot.source) +
+  geom_raster(aes(x=lon,y = lat,
+                  fill = diff),alpha = 1) +
+  geom_sf(data = world,fill = NA, color = "grey") +
+  geom_sf(data = Amazon.shp,fill = NA, color = "black") +
+
+  coord_sf(xlim = c(-85, -30), ylim = c(-25, 10), expand = FALSE) +
+  scale_fill_gradient2(limits = c(-2,2)*2.5,
+                       oob = scales::squish,
+                       midpoint = 0,
+                       low = "darkred",mid = "grey",high = "darkgreen") +
+  labs(x = "",y = "") +
+  theme_map() +
+  guides(fill = "none") +
+  theme(text = element_text(size = 20),
+        strip.background = element_blank(),
+        strip.text = element_blank())
+
 
 map2plot.wide <- map2plot %>%
   dplyr::select(lat,lon,source,anomaly.m) %>%
@@ -236,10 +262,14 @@ all.MEM.dt %>%
 
 all.MEM.dt.groups <- all.MEM.dt %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2016 & month %in% c(1:3) ~ "2015",
-                            year == 2015 & month %in% c(10:12) ~ "2015",
-                            year == 1997 & month %in% 10:12 ~ "1997",
-                            year == 1998 & month %in% 1:4 ~ "1997",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            year == 2016 & month %in% c(1:4) ~ "2015",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
+                            year == 1998 & month %in% 1:5 ~ "1997",
+
                             TRUE ~ NA_character_)) %>%
   filter(!is.na(groups))
 
@@ -256,7 +286,7 @@ ggplot(data = all.MEM.dt.groups.sum %>%
   geom_sf(data = Amazon.shp,fill = NA, color = "black") +
 
   coord_sf(xlim = c(-85, -30), ylim = c(-25, 10), expand = FALSE) +
-  scale_fill_gradient2(limits = c(-2,1)*2.5,
+  scale_fill_gradient2(limits = c(-2,1)*1.5,
                        oob = scales::squish,
                        midpoint = 0,
                        low = "darkred",mid = "grey",high = "darkgreen") +
@@ -274,7 +304,7 @@ ggplot(data = all.MEM.dt.groups.sum,
            fill = stat(x))) +
   geom_density_ridges_gradient(show.legend = FALSE, alpha = 1,
                                scale = .9) +
-  scale_fill_gradient2(limits = c(-2,1)*2.5,
+  scale_fill_gradient2(limits = c(-2,1)*1.5,
                        oob = scales::squish,
                        midpoint = 0,
                        low = "darkred",mid = "grey",high = "darkgreen") +
@@ -292,16 +322,71 @@ ggplot(data = all.MEM.dt.groups.sum %>%
            fill = stat(x))) +
   geom_density_ridges_gradient(show.legend = FALSE, alpha = 0.5,
                                scale = 1) +
-  scale_fill_gradient2(limits = c(-2,1)*2.5,
+  scale_fill_gradient2(limits = c(-2,1)*1.5,
                        oob = scales::squish,
                        midpoint = 0,
                        low = "darkred",mid = "grey",high = "darkgreen") +
   geom_vline(xintercept = 0,linetype = 2) +
   labs(x = "",y = "") +
-  scale_x_continuous(limits = c(-10,5)) +
+  scale_x_continuous(limits = c(-6,2)) +
   theme_minimal() +
   theme(text = element_text(size = 20),
         panel.grid = element_blank())
+
+
+
+map2plot <- all.MEM.dt %>%
+  filter(year == 2023,
+         month == 10)
+ggplot(data = map2plot) +
+  geom_raster(aes(x=lon,y = lat,
+                  fill = anomaly.m),alpha = 1) +
+  geom_sf(data = world,fill = NA, color = "grey") +
+  geom_sf(data = Amazon.shp,fill = NA, color = "black") +
+
+  coord_sf(xlim = c(-85, -30), ylim = c(-25, 10), expand = FALSE) +
+  scale_fill_gradient2(limits = c(-2,1)*2.5,
+                       oob = scales::squish,
+                       midpoint = 0,
+                       low = "darkred",mid = "grey",high = "darkgreen") +
+  labs(x = "",y = "") +
+  facet_wrap(~ source) +
+  theme_map() +
+  guides(fill = "none") +
+  theme(text = element_text(size = 20),
+        strip.background = element_blank(),
+        strip.text = element_blank())
+
+map2plot.wide <- all.MEM.dt.groups.sum %>%
+  filter(groups == "2023") %>%
+  ungroup() %>%
+  dplyr::select(lat,lon,source,anomaly.m) %>%
+  pivot_wider(names_from = source,
+              values_from = anomaly.m)
+
+scatter <- ggplot(data = map2plot.wide,
+                  aes(x = Trendy, y = RS)) +
+  geom_point(size = 0.5, color = "grey") +
+  stat_smooth(method = "lm", color = "black",
+              se = FALSE) +
+  geom_abline(slope = 1, intercept = 0,
+              linetype = 2) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_vline(xintercept = 0, linetype = 2) +
+  theme_bw() +
+  labs(x = "",y = "") +
+  theme(text = element_text(size = 20))
+
+map2plot.wide %>%
+  ungroup() %>%
+  summarise(r2 = summary(lm(RS ~ Trendy))[["r.squared"]],
+            slope = coef(lm(RS ~ Trendy))[2],
+            intercept = coef(lm(RS ~ Trendy))[1])
+
+ggExtra::ggMarginal(scatter,
+                    type = "density",
+                    fill = "grey", color = NA)
+
 
 all.MEM.dt.groups.sum %>%
   group_by(source,groups) %>%

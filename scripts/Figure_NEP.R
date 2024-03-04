@@ -13,8 +13,8 @@ A %>%
 MEM.area.anomalies.wide <- A  %>%
   filter(year <= 2021)
 
-droughts <- data.frame(x1 = c(1997,2009,2015,2023) + 0.5/12,
-                       x2 = c(1998,2010,2016,2023) +
+droughts <- data.frame(x1 = c(1997,2015,2023) + 0.5/12,
+                       x2 = c(1998,2016,2023) +
                          11.5/12)
 
 Window = 12
