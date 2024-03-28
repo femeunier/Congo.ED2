@@ -1,8 +1,6 @@
-convert.ERA5.decade <- function(decade){
-
-
-  dir <- "/data/gent/vo/000/gvo00074/ED_common_data/met/Tropics/"
-
+convert.ERA5.decade <- function(decade,
+                                dir_prefix = "/data/gent/vo/000/gvo00074/ED_common_data/met/Tropics/ERA5_Tropics",
+                                OPpath_prefix = "./outputs/monthly.climate.pantropical.ERA5"){
 
   years2change <- 1940:1949 + (decade - 1)*10
 
@@ -16,7 +14,7 @@ convert.ERA5.decade <- function(decade){
   vars <- c("t2m","ssrd","tp","strd","d2m")
   for (cyear in years2change){
 
-    ncfile <- file.path(dir,paste0("ERA5_Tropics_",cyear,".nc"))
+    ncfile <- file.path(dir,paste0(prefix,"_",cyear,".nc"))
 
     if (!file.exists(ncfile)) next()
 
@@ -125,6 +123,6 @@ convert.ERA5.decade <- function(decade){
   }
 
   saveRDS(all.df.years,
-          paste0("./outputs/monthly.climate.pantropical.ERA5_",min(years2change),".RDS"))
+          paste0(OPpath_prefix,"_",min(years2change),".RDS"))
 
 }
