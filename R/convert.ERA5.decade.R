@@ -37,7 +37,9 @@ convert.ERA5.decade <- function(decade,
         cvar = vars[ivar]
         ctimes <- times[pos.month]
 
-        if (cyear >= 2023){
+        temp <- length(dim(ncvar_get(nc,cvar)))
+
+        if (temp == 4){
 
           data <- ncvar_get(nc,cvar,
                             start = c(1,1,1,min(pos.month)),
