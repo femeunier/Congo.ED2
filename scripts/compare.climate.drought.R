@@ -61,13 +61,13 @@ climate.sum <- climate.select %>%
   group_by(year,month) %>%
   summarise(tmp = mean(tmp,na.rm = TRUE),
             spfh = mean(spfh,na.rm = TRUE),
-            VPD = mean(VPD,na.rm = TRUE),
+            VPD = 0.1*mean(VPD,na.rm = TRUE),
             dswrf = mean(dswrf,na.rm = TRUE),
             dlwrf = mean(dlwrf,na.rm = TRUE),
             tmin = mean(tmin,na.rm = TRUE),
             tmax = mean(tmax,na.rm = TRUE),
             # pre = mean(pre*N*4,na.rm = TRUE),
-            pre = mean(pre,na.rm = TRUE),
+            pre = mean(pre*N*8,na.rm = TRUE),
             .groups = "keep") %>%
   pivot_longer(cols = -c(year,month),
                names_to = "variable",

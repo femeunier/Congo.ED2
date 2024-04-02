@@ -36,6 +36,9 @@ combined <- climate.sum.anomaly %>%
   mutate(timing = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
                             year == 2024 & month %in% c(1:3) ~ "2023",
 
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
+
                             year == 2016 & month %in% c(1:4) ~ "2015",
                             year == 2015 & month %in% c(8:12) ~ "2015",
 
@@ -174,7 +177,7 @@ ggplot(data = combined ,
   scale_color_manual(values = c("#1b9e77","#d95f02","#7570b3")) +
   scale_fill_manual(values = c("#1b9e77","#d95f02","#7570b3")) +
 
-  facet_wrap(~ source,nrow = 2) +
+  facet_wrap(~ source,nrow = 1) +
   geom_smooth(method = "lm", formula= y ~ poly(x,X),
               se = FALSE,
               color = "black") +

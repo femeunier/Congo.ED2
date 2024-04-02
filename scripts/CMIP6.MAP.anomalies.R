@@ -4,12 +4,13 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(zoo)
+library(lubridate)
 
 system2("rsync",
-        paste("-avz","hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/df.monthly.tas*",
+        paste("-avz","hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/df.monthly.pr*",
               "./outputs/"))
 
-l.files <- list.files("./outputs",pattern = "df.monthly.tas*")
+l.files <- list.files("./outputs",pattern = "df.monthly.pr*")
 OP.files.no.ext <- tools::file_path_sans_ext((l.files))
 all.attributes <- strsplit(OP.files.no.ext,split = "\\.")
 
@@ -31,8 +32,11 @@ for (ifile in seq(1,length(l.files))){
   data.sum <- bind_rows(list(data.sum,
                              cdata %>%
                                group_by(year,month,scenario,model) %>%
-                               summarise(tas.m = mean(tas,na.rm = TRUE),
-                                         .groups = "keep")))
+                               summarise(pr.m = mean(pr,na.rm = TRUE),
+                                         .groups = "keep") %>%
+                               mutate(N = days_in_month(as.Date(paste0(year,"/",sprintf("%20d",month),"/01")))) %>%
+                               mutate(pr.m = 365/12*86400*pr.m)
+  ))
 
 }
 
@@ -41,7 +45,7 @@ df.models <- data.sum %>%
   distinct() %>%
   mutate(exist = TRUE) %>%
   pivot_wider(names_from = scenario,
-             values_from = exist) %>%
+              values_from = exist) %>%
   filter(historical,ssp126,ssp245,
          ssp370,ssp585)
 
@@ -73,41 +77,41 @@ for (cmodel in models){
   }
 }
 
-data.mod <- data.mod %>%
-  filter(tas.m <= 400)
+# data.mod <- data.mod %>%
+#   filter(tas.m <= 400)
 
 Window = 6
 
 data.mod.anomalies <- data.mod %>%
   filter((year >= 1994 & scenario != "historical") |
            ((year %in% 1985:2014 & scenario == "historical")))%>%
+  group_by(model,year,scenario) %>%
+  summarise(pr.m = sum(pr.m,na.rm = TRUE),
+            .groups = "keep") %>%
   group_by(model,scenario) %>%
-  mutate(global.mean = mean(tas.m[year <= 2023],na.rm = TRUE)) %>%
-  group_by(model,scenario,month) %>%
-  mutate(mean.month = mean(tas.m[year <= 2023] - global.mean[year <= 2023],
-                           na.rm = TRUE)) %>%
+  mutate(global.mean = mean(pr.m[year <= 2023],na.rm = TRUE)) %>%
   group_by(model,scenario) %>%
-  mutate(anomaly.month = tas.m - mean.month - global.mean) %>%
-  mutate(anomaly.month.rm = rollapply(anomaly.month, width=Window,
-                                  FUN=function(x) mean(x, na.rm=TRUE),
-                                  partial=TRUE, fill=NA, align="center"))
+  mutate(anomaly = pr.m - global.mean) %>%
+  mutate(anomaly.rm = rollapply(anomaly, width=Window,
+                                      FUN=function(x) mean(x, na.rm=TRUE),
+                                      partial=TRUE, fill=NA, align="center"))
 
 data.mod.anomalies.sum <- data.mod.anomalies %>%
   group_by(year,scenario) %>%
-  summarise(tas.m = mean(tas.m,na.rm = TRUE),
-            anomaly.month.rm.m = mean(anomaly.month.rm,na.rm = TRUE),
+  summarise(pr.m = mean(pr.m,na.rm = TRUE),
+            anomaly.rm.m = mean(anomaly.rm,na.rm = TRUE),
             .groups = "keep")
 
 ggplot(data = data.mod.anomalies.sum) +
   geom_line(aes(x = year,
-                y = tas.m,
+                y = pr.m,
                 color = scenario)) +
   theme_bw()
 
 
 ggplot(data = data.mod.anomalies.sum) +
   geom_line(aes(x = year,
-                y = anomaly.month.rm.m,
+                y = anomaly.rm.m,
                 color = scenario)) +
   theme_bw()
 
@@ -131,18 +135,19 @@ climate.select <- climate %>%
   filter(lon.lat %in% coord[["lon.lat"]])
 
 data <- climate.select %>%
-  dplyr::select(lon,lat,tmp,year,month) %>%
+  dplyr::select(lon,lat,pre,year,month) %>%
   group_by(year,month) %>%
-  summarise(value = mean(tmp),
+  summarise(value = mean(pre),
             .groups = "keep") %>%
+  mutate(N = days_in_month(as.Date(paste0(year,"/",sprintf("%20d",month),"/01")))) %>%
+  group_by(year) %>%
+  summarise(value = sum(value*N*8)) %>%
   ungroup() %>%
   mutate(global.mean = mean(value[year >= 1994 &year <= 2023],na.rm = TRUE)) %>%
-  group_by(month) %>%
-  mutate(mean.month = mean(value[year >= 1994 & year <= 2023] - global.mean[year >= 1994 & year <= 2023],
-                           na.rm = TRUE)) %>%
   ungroup() %>%
-  mutate(anomaly.month = value - mean.month - global.mean) %>%
-  mutate(anomaly.month.rm = rollapply(anomaly.month, width=Window,
+  filter(year <= 2023) %>%
+  mutate(anomaly = value - global.mean) %>%
+  mutate(anomaly.rm = rollapply(anomaly, width=Window,
                                       FUN=function(x) mean(x, na.rm=TRUE),
                                       partial=TRUE, fill=NA, align="center"))
 
@@ -150,16 +155,19 @@ data <- climate.select %>%
 CMIP.vs.JRA <- data.mod.anomalies %>%
   filter(scenario == "historical") %>%
   ungroup() %>%
-  dplyr::select(year,month,model,tas.m) %>%
+  dplyr::select(year,model,pr.m) %>%
   left_join(data %>%
               ungroup() %>%
-              dplyr::select(year,month,value),
-            by = c("year","month"))
+              dplyr::select(year,value),
+            by = c("year")) %>%
+  group_by(year,model) %>%
+  mutate(MAP = sum(pr.m,na.rm = TRUE),
+         MAP2 = sum(value,na.rm = TRUE))
 
 weights <- CMIP.vs.JRA %>%
   group_by(model) %>%
-  summarise(RMSE = sqrt(sum((tas.m-value)**2,na.rm = TRUE)),
-            bias = mean(abs(tas.m - value),na.rm = TRUE),
+  summarise(RMSE = sqrt(sum((MAP2 - MAP)**2,na.rm = TRUE)),
+            bias = mean(abs(MAP2 - MAP),na.rm = TRUE),
             .groups = "keep") %>%
   arrange(RMSE) %>%
   ungroup() %>%
@@ -168,96 +176,98 @@ weights <- CMIP.vs.JRA %>%
   mutate(w = w/sum(w)) %>%
   arrange(model)
 
-saveRDS(weights,
-        "./outputs/weights.tas.RDS")
+# weights <- readRDS("./outputs/weights.tas.RDS")
 
 sum(round(weights$w, digits = 2))
 ggplot() +
   geom_line(data = data.mod.anomalies %>%
-              filter(scenario == "historical",
-                     model == weights %>% filter(w == max(w)) %>% pull(model)),
-            aes(x = year + (month - 1/2)/12,
-                y = tas.m),
-            color = "red") +
-  geom_line(data = data,
-            aes(x = year + (month - 1/2)/12,
+              filter(scenario == "historical"),
+            aes(x = year,
+                y = pr.m,
+                group = interaction(scenario,model)),
+            color = "lightgrey") +
+  geom_line(data = data %>%
+              filter(year <= 2023),
+            aes(x = year,
                 y = value)) +
 
   theme_bw()
 
 ggplot() +
   geom_line(data = data.mod.anomalies %>%
-              filter(scenario == "historical",
-                     model == weights %>% filter(w == max(w)) %>% pull(model)) %>%
-              group_by(year) %>%
-              summarise(tas.m = mean(tas.m)),
+              group_by(year,model,scenario) %>%
+              summarise(pr.m = sum(pr.m),
+                        .groups = "keep"),
             aes(x = year,
-                y = tas.m),
-            color = "red") +
+                y = pr.m,
+                group = interaction(model,scenario)),
+            color = "lightgrey") +
   geom_line(data = data %>%
+              filter(year <= 2023) %>%
               group_by(year) %>%
-              summarise(value = mean(value)),
+              summarise(value = mean(value),
+                        .groups = "keep"),
             aes(x = year,
                 y = value)) +
 
   theme_bw()
 
+
 data.mod.anomalies.sum <- data.mod.anomalies %>%
-  group_by(scenario,year,model,month) %>%
-  summarise(tas.m = mean(tas.m),
-            anomaly.month.rm = mean(anomaly.month.rm),
+  group_by(scenario,year,model) %>%
+  summarise(pr.m = mean(pr.m),
+            anomaly.rm = mean(anomaly.rm),
             .groups = "keep") %>%
   ungroup() %>%
   left_join(weights,
             by = "model") %>%
-  group_by(scenario,year,month) %>%
+  group_by(scenario,year) %>%
   filter(!is.na(RMSE)) %>%
-  summarise(anomaly.month.rm = weighted.mean(anomaly.month.rm,
+  summarise(anomaly.rm = weighted.mean(anomaly.rm,
                                              w = 1/bias**2,
                                              na.rm = TRUE),
-            tas.m.m = weighted.mean(tas.m,
-                                    w = 1/bias**2,
-                                    na.rm = TRUE),
+            pr.m.m = weighted.mean(pr.m,
+                                   w = 1/bias**2,
+                                   na.rm = TRUE),
             .groups = "keep")
 
 
 data.mod.anomalies.sum <- data.mod.anomalies.sum %>%
   ungroup() %>%
-  mutate(global.mean = mean(tas.m.m[year <= 2023],na.rm = TRUE)) %>%
-  group_by(scenario,month) %>%
-  mutate(mean.month = mean(tas.m.m[year <= 2023] - global.mean[year <= 2023],
-                           na.rm = TRUE)) %>%
+  mutate(global.mean = mean(pr.m.m[year <= 2023],na.rm = TRUE)) %>%
   group_by(scenario) %>%
-  mutate(anomaly.month2 = tas.m.m - mean.month - global.mean) %>%
-  mutate(anomaly.month.rm2 = rollapply(anomaly.month2, width=Window,
-                                      FUN=function(x) mean(x, na.rm=TRUE),
-                                      partial=TRUE, fill=NA, align="center"))
+  group_by(scenario) %>%
+  mutate(anomaly2 = pr.m.m - global.mean) %>%
+  mutate(anomaly.rm2 = rollapply(anomaly2, width=Window,
+                                       FUN=function(x) mean(x, na.rm=TRUE),
+                                       partial=TRUE, fill=NA, align="center"))
 
 ggplot(data = data.mod.anomalies.sum %>%
-         group_by(year,month) %>%
+         group_by(year) %>%
          mutate(N = n()) %>%
          filter(N == 4 | (N == 5 & scenario == "historical"))) +
-  geom_line(aes(x = year + (month - 1/2)/12,
-                y = tas.m.m -273.15,
+  geom_line(aes(x = year,
+                y = pr.m.m,
                 color = scenario)) +
-  geom_line(data = data,
-            aes(x = year + (month - 1/2)/12,
-                y = value-273.15),
+  geom_line(data = data %>%
+              filter(year <= 2023),
+            aes(x = year,
+                y = value),
             color = "black",linetype = 2) +
   # geom_smooth(data = data.mod.anomalies.sum %>%
   #               group_by(year,month) %>%
   #               mutate(N = n()) %>%
   #               filter(N == 4 | (N == 5 & scenario == "historical")),
   #             aes(x = year + (month - 1/2)/12,
-  #                 y = rollmean(tas.m.m-273.15, k = 12,na.pad = TRUE),
+  #                 y = rollmean(pr.m.m, k = 12,na.pad = TRUE),
   #                 color = scenario),
   #             se = FALSE) +
   #
   # geom_smooth(data = data,
   #             aes(x = year + (month - 1/2)/12,
-  #                 y = rollmean(value-273.15, k = 12,na.pad = TRUE)),
-  #             color = "black", linetype = 1, se = FALSE) +
-  scale_color_manual(values = c("grey","#263b5d","#8b9bac","#b48a40","#6a2d31"))+
+#                 y = rollmean(value, k = 12,na.pad = TRUE)),
+#             color = "black", linetype = 1, se = FALSE) +
+scale_color_manual(values = c("grey","#263b5d","#8b9bac","#b48a40","#6a2d31"))+
   theme_bw() +
   theme(text = element_text(size = 20)) +
   guides(color = "none") +
@@ -266,71 +276,62 @@ ggplot(data = data.mod.anomalies.sum %>%
   scale_x_continuous(limits = c(1994,2100))
 
 
-
 d.select <- data.mod.anomalies.sum %>%
   filter(year %in% c(2024:2053)) %>%
   group_by(scenario) %>%
-  mutate(time = year + (month -1/2)/12,
-         tas.m.m = tas.m.m - 273.15)
+  mutate(time = year,
+         pr.m.m = pr.m.m)
 
 d.select %>%
-  summarise(slope = coef(lm(formula = tas.m.m ~ time))[2]*10,   # Per decade
+  summarise(slope = coef(lm(formula = pr.m.m ~ time))[2]*10,   # Per decade
             .groups = "keep")
 
 ggplot(data = d.select,
-       aes(x = time, y = tas.m.m,
+       aes(x = time, y = pr.m.m,
            color = scenario)) +
   # geom_line() +
   stat_smooth(method = "lm", se = FALSE) +
   theme_bw()
 
 ggplot(data = data.mod.anomalies.sum %>%
-         group_by(year,month) %>%
+         group_by(year) %>%
          mutate(N = n()) %>%
          filter(N == 4 | (N == 5 & scenario == "historical")) %>%
          group_by(year,scenario) %>%
-         summarise(tas.m.m = mean(tas.m.m,na.rm = TRUE),
+         summarise(pr.m.m = sum(pr.m.m,na.rm = TRUE),
                    .groups = "keep")) +
   geom_line(aes(x = year,
-                y = tas.m.m -273.15,
+                y = pr.m.m,
                 color = scenario)) +
   geom_line(data = data %>%
-               filter(year < 2024) %>%
+              filter(year < 2024) %>%
               group_by(year) %>%
               summarise(value = mean(value,na.rm = TRUE),
                         .groups = "keep"),
             aes(x = year ,
-                y = value-273.15),
+                y = value),
             color = "black",linetype = 1) +
-
-  # geom_point(data = data %>%
-  #             filter(year == 2024) %>%
-  #             group_by(year) %>%
-  #             summarise(value = mean(value,na.rm = TRUE),
-  #                       .groups = "keep"),
-  #           aes(x = year ,
-  #               y = value-273.15),
-  #           color = "black",linetype = 1) +
 
   scale_color_manual(values = c("grey","#263b5d","#8b9bac","#b48a40","#6a2d31"))+
   theme_bw() +
   theme(text = element_text(size = 20)) +
   guides(color = "none") +
   labs(x = "",y = "") +
-  scale_y_continuous(limits = c(24,31)) +
+  # scale_y_continuous(limits = c(24,31)) +
   scale_x_continuous(limits = c(1994,2100))
 
 
 ggplot(data = data.mod.anomalies.sum %>%
-         group_by(year,month) %>%
+         group_by(year) %>%
          mutate(N = n()) %>%
          filter(N == 4 | (N == 5 & scenario == "historical")),) +
-  geom_line(aes(x = year + (month - 1/2)/12,
-                y = anomaly.month.rm2,
+  geom_line(aes(x = year,
+                y = anomaly.rm2,
                 color = scenario)) +
-  geom_line(data = data,
-            aes(x = year + (month - 1/2)/12,
-                y = anomaly.month.rm)) +
+  geom_line(data = data %>%
+              filter(year <= 2023),
+            aes(x = year,
+                y = anomaly.rm)) +
   scale_color_manual(values = c("grey","#263b5d","#8b9bac","#b48a40","#6a2d31"))+
 
   geom_hline(yintercept = 0,linetype = 2, color = "black") +
@@ -357,7 +358,7 @@ all2plot <- bind_rows(data.mod.anomalies.sum %>%
 ggplot(data = all2plot) +
 
 
-  geom_boxplot(aes(y = anomaly.month.rm,
+  geom_boxplot(aes(y = anomaly.rm,
                    x = scenario,
                    fill = scenario),
                alpha = 0.7) +
@@ -374,7 +375,7 @@ ggplot(data = all2plot) +
   labs(x = "",y = "") +
   scale_fill_manual(values = c("#6a2d31","#b48a40","#8b9bac","#263b5d","grey","black"))+
   geom_hline(linetype = 2,yintercept = 0) +
-  scale_y_continuous(breaks = (-1:5)*0.5) +
+  # scale_y_continuous(breaks = (-1:5)*0.5) +
   coord_flip() +
   # scale_y_continuous() +
   guides(fill = "none") +
@@ -382,60 +383,45 @@ ggplot(data = all2plot) +
   theme_bw() +
   theme(text = element_text(size = 20))
 
-data %>%
-  filter(month > 6,
-         year == 2023) %>%
-  pull(anomaly.month.rm) %>%
-  mean()
-
 
 all2plot %>%
   group_by(scenario) %>%
-  mutate(Q1 = quantile(anomaly.month.rm,0.25),
-            Q3 = quantile(anomaly.month.rm,0.75)) %>%
+  mutate(Q1 = quantile(anomaly.rm,0.25),
+         Q3 = quantile(anomaly.rm,0.75)) %>%
   mutate(IQR = (Q3 - Q1)) %>%
-  summarise(low = max(c(min(anomaly.month.rm),Q1 - 1.5*IQR)),
-            high = min(c(max(anomaly.month.rm),Q3 + 1.5*IQR)),
+  summarise(low = max(c(min(anomaly.rm),Q1 - 1.5*IQR)),
+            high = min(c(max(anomaly.rm),Q3 + 1.5*IQR)),
             Q1 = unique(Q1),
             Q3 = unique(Q3))
 
-all2plot %>%
-  filter(scenario == "ERA5",
-         year == 2023)
-
-all2plot %>%
-  filter(scenario == "ERA5",
-         anomaly.month.rm >= 0.74) %>%
-  arrange(desc(anomaly.month.rm))
 
 all2plot %>%
   group_by(scenario) %>%
-  summarise(med = median(anomaly.month.rm),
-            m = mean(anomaly.month.rm),
+  summarise(med = median(anomaly.rm),
+            m = mean(anomaly.rm),
             .groups = "keep")
 
 all2plot %>%
-  filter(year == 2023,
-         month %in% 7:12) %>%
-  summarise(m = mean(anomaly.month.rm),
-            m2 = mean(anomaly.month))
+  filter(year == 2023) %>%
+  summarise(m = mean(anomaly.rm),
+            m2 = mean(anomaly))
 
 ################################################################################
 
 all2plot2 <- bind_rows(data.mod.anomalies.sum %>%
                          group_by(scenario) %>%
-                        filter((scenario == "historical" & year %in% c(1985:2014)) |
-                                 (scenario != "historical" & year %in% c(2071:2100))) ,
-                      data %>%
-                        filter(year >= 1994) %>%
-                        mutate(scenario = "ERA5")) %>%
+                         filter((scenario == "historical" & year %in% c(1985:2014)) |
+                                  (scenario != "historical" & year %in% c(2071:2100))) ,
+                       data %>%
+                         filter(year >= 1994) %>%
+                         mutate(scenario = "ERA5")) %>%
   mutate(scenario = factor(scenario,
                            levels = c("ssp585","ssp370","ssp245","ssp126",
                                       "historical","ERA5")))
 
 ggplot(data = all2plot2) +
 
-  geom_boxplot(aes(y = anomaly.month.rm,
+  geom_boxplot(aes(y = anomaly.rm,
                    x = scenario,
                    fill = scenario),
                alpha = 0.7) +
@@ -445,7 +431,8 @@ ggplot(data = all2plot2) +
   labs(x = "",y = "") +
   scale_fill_manual(values = c("#6a2d31","#b48a40","#8b9bac","#263b5d","grey","black"))+
   geom_hline(linetype = 2,yintercept = 0) +
-  scale_y_continuous(breaks = (-1:12)*0.5) +
+  scale_y_continuous(breaks = c(-200,-100,0,100),
+                     limits = c(-200,100)) +
   coord_flip() +
   # scale_y_continuous() +
   guides(fill = "none") +

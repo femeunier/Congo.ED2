@@ -2,6 +2,7 @@ rm(list = ls())
 
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 
 climate <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS")
 
@@ -55,7 +56,7 @@ ggplot(data = climate.select.sum %>%
 climate.select.sum %>%
   filter(variable == "pre") %>%
   group_by(year) %>%
-  summarise(m = mean(value.m)*8*365)
+  summarise(m = mean((value.m)*8*365))
 
 climate.select.sum.wide <- climate.select.sum %>%
   pivot_wider(names_from = variable,

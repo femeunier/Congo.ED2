@@ -123,6 +123,25 @@ droughts <- data.frame(x1 = c(1997,2015,2023) + 0.5/12,
 #         strip.text = element_blank())
 
 
+
+climate.sum.anomaly %>%
+  filter(variable %in% c("tmp","pre")) %>%
+  filter((year == 2023 & month == 10)) %>%
+  group_by(variable) %>%
+  summarise(m = mean(value,na.rm = TRUE),
+            anomaly = mean(anomaly,na.rm = TRUE),
+            anomaly.m = mean(anomaly.m,na.rm = TRUE))
+
+
+climate.sum.anomaly %>%
+  filter(variable %in% c("tmin","tmax","VPD")) %>%
+  filter((year == 2024) |
+           (year == 2023 & month >= 7)) %>%
+  group_by(variable) %>%
+  summarise(m = mean(value,na.rm = TRUE),
+            anomaly = mean(anomaly,na.rm = TRUE))
+
+
 climate.sum.anomaly.select <- climate.sum.anomaly %>%
   filter(variable %in% c("pre","tmp"))
 
@@ -137,6 +156,9 @@ climate.sum.anomaly.select.group <- climate.sum.anomaly.select %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
                             year == 2024 & month %in% c(1:3) ~ "2023",
 
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
+
                             year == 2016 & month %in% c(1:4) ~ "2015",
                             year == 2015 & month %in% c(8:12) ~ "2015",
 
@@ -148,6 +170,7 @@ climate.sum.anomaly.select.group <- climate.sum.anomaly.select %>%
                                TRUE ~ NA_real_))%>%
   mutate(value = case_when((year == 1998 & month == 5) |
                              (year == 2016 & month == 4) |
+                             (year == 2010 & month == 5) |
                              (year == 2024 & month == 3) ~ NA,
                                TRUE ~ value)) %>%
   arrange(year,month,variable)
@@ -162,11 +185,13 @@ ggplot() +
             color = "grey", size = 0.15) +
 
   geom_line(data = climate.sum.anomaly.select %>%
+              filter(year >= 1994 & year <= 2023) %>%
               group_by(variable,month) %>%
               summarise(value.m = mean(value,na.rm = TRUE),
                         .groups = "keep"),
             aes(x = month,
                 y = value.m),
+            linewidth = 0.8,
             linetype = 1) +
 
   geom_line(data = climate.sum.anomaly.select.group %>%
@@ -174,6 +199,7 @@ ggplot() +
             aes(x = month,
                 y = value,
                 color = as.factor(groups)),
+            linewidth =  0.8,
             show.legend = FALSE) +
 
   scale_x_continuous(breaks = 1:12,
@@ -268,10 +294,9 @@ climate.sum.anomaly.select %>%
 
 
 climate.sum.anomaly.select %>%
-  ungroup() %>%
-  filter(month %in% c(10),
-         year == 2023) %>%
-  # filter(variable == "pre") %>%
+  filter(year <= 2023) %>%
+  # filter(month %in% c(1,2,7:12)) %>%
+  filter(variable == "tmp") %>%
   group_by(variable) %>%
   summarise(anomaly.m = mean(anomaly.m,
                              na.rm = TRUE),
@@ -318,14 +343,17 @@ climate.sum.anomaly.selected <- climate.sum.anomaly %>%
   dplyr::select(year,month,variable,anomaly.m,anomaly,value)
 
 climate.sum.anomaly.selected.group <- climate.sum.anomaly.selected %>%
-  mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2024 & month %in% c(1:3) ~ "2023",
+  mutate(groups =  case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                             year == 2024 & month %in% c(1:3) ~ "2023",
 
-                            year == 2016 & month %in% c(1:4) ~ "2015",
-                            year == 2015 & month %in% c(8:12) ~ "2015",
+                             # year == 2009 & month %in% c(8:12) ~ "2010",
+                             # year == 2010 & month %in% c(1:5) ~ "2010",
 
-                            year == 1997 & month %in% 9:12 ~ "1997",
-                            year == 1998 & month %in% 1:5 ~ "1997",
+                             year == 2016 & month %in% c(1:4) ~ "2015",
+                             year == 2015 & month %in% c(8:12) ~ "2015",
+
+                             year == 1997 & month %in% 9:12 ~ "1997",
+                             year == 1998 & month %in% 1:5 ~ "1997",
 
                             TRUE ~ NA)) %>%
   mutate(value = case_when(!is.na(groups) ~ value,
@@ -336,14 +364,17 @@ climate.sum.anomaly.selected.group <- climate.sum.anomaly.selected %>%
                              TRUE ~ NA_real_)) %>%
   mutate(value = case_when((year == 1998 & month == 5) |
                              (year == 2024 & month == 3) |
+                             (year == 2010 & month == 5) |
                                  (year == 2016 & month == 4) ~ NA,
                                TRUE ~ value),
          anomaly.m = case_when((year == 1998 & month == 5) |
                                  (year == 2024 & month == 3) |
+                                 (year == 2010 & month == 5) |
                                  (year == 2016 & month == 4) ~ NA,
                             TRUE ~ anomaly.m),
          anomaly = case_when((year == 1998 & month == 5) |
                                (year == 2024 & month == 3) |
+                               (year == 2010 & month == 5) |
                                  (year == 2016 & month == 4) ~ NA,
                                TRUE ~ anomaly)) %>%
   arrange(year,month,variable)
@@ -380,7 +411,7 @@ ggplot() +
                                 "J","A","S","O","N","D")) +
   geom_hline(yintercept = 0, linetype = 2,
              color = "black") +
-  scale_color_manual(values = c("#1b9e77","#d95f02","#7570b3")) +
+  scale_color_manual(values = c("#1b9e77","#d95f02","#7570b3")) +  ##e7298a
   theme_bw() +
   labs(x = "", y = "") +
   facet_wrap(~ variable) +
@@ -448,6 +479,7 @@ ggplot() +
             aes(x = month,
                 y = anomaly,
                 color = as.factor(groups)),
+            linewidth =  0.8,
             show.legend = FALSE) +
 
   scale_x_continuous(breaks = 1:12,

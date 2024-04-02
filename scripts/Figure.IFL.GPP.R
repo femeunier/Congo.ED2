@@ -2,29 +2,30 @@ rm(list = ls())
 
 library(sf)
 library(ggthemes)
+library(ggridges)
 
 
-coord <- readRDS("./outputs/Amazon.coord.GPP.products.ILF.RDS") %>%
-  filter(model %in% c("SIF","SIF2","VOD","NIR")) %>%
+coord <- readRDS("./outputs/Coord.ILF.ERA5.RDS") %>%
+  # filter(product %in% c("SIF","SIF2","VOD","NIR")) %>%
   mutate(lat.lon = paste0(lat,".",lon))
 
-SIF.data <- readRDS("./outputs/GPP.products.Amazon.ILF.RDS") %>%
+SIF.data <- readRDS("./outputs/all.predictions.SIF.ILF.ERA5.RDS") %>%
   mutate(basin = "Amazon") %>%
   mutate(lat.lon = paste0(lat,".",lon))
 
 SIF.data.sum <- SIF.data %>%
-  filter(model %in% c("SIF","SIF2","VOD","NIR"),
-         year %in% c(2001:2019)) %>%
+  filter(product %in% c("SIF","SIF2","VOD","NIR"),
+         year %in% c(2001:2018)) %>%
   filter(lat.lon %in% coord[["lat.lon"]]) %>%
   group_by(lat,lon) %>%
-  summarise(value.m = mean(value,
+  summarise(value.m = mean(pred,
                            na.rm = TRUE),
             .groups = "keep")
 
 
-Trendy <- readRDS("./outputs/Trendy.data.rspld.pred.RDS") %>%
+Trendy <- readRDS("./outputs/Trendy.data.rspld.ERA5.pred.RDS") %>%
   filter(year >= 1994,
-         year %in% c(2001:2019)) %>%
+         year %in% c(2001:2018)) %>%
   mutate(lat.lon = paste0(lat,".",lon)) %>%
   filter(lat.lon %in% coord[["lat.lon"]])
 
@@ -42,10 +43,6 @@ world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
                       layer = "amazon_sensulatissimo_gmm_v1")
 Amazon <- as_Spatial(Amazon.shp)
-
-Congo.shp <- read_sf(dsn = "/home/femeunier/Desktop/FWO/",
-                     layer = "CongoBasin")
-Congo <- as_Spatial(Congo.shp)
 
 
 all <- bind_rows(Trendy.sum %>%

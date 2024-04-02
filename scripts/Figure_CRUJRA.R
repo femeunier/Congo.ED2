@@ -53,14 +53,35 @@ df.ERA5.sum.long <- df.ERA5.sum %>%
   pivot_longer(cols = c(pre,tmp),
                names_to = "variable")
 
-df.JRA.sum.long <- readRDS("./outputs/climate.anomalies.JRA.historical.RDS") %>%
-  filter(variable %in% c("tmp","pre"))
+coord <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
+  filter(model == "ORCHIDEE") %>%
+  mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2)))
+
+
+system2("rsync",
+        c("-avz",
+          "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/monthly.climate.pantropical.CRUJRA.RDS",
+          "./outputs"))
+
+df.CRUJRA <- readRDS("./outputs/monthly.climate.pantropical.CRUJRA.RDS") %>%
+  dplyr::select(lat,lon,year,month,tmp,pre) %>%
+  mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2))) %>%
+  filter(lon.lat %in% coord[["lon.lat"]]) %>%
+  mutate(N = days_in_month(as.Date(paste0(year,"/",sprintf("%20d",month),"/01")))) %>%
+  mutate(pre = pre*N*4) %>%
+  pivot_longer(cols = c(tmp,pre),
+               values_to = "value",
+               names_to = "variable") %>%
+  filter(year >= 1958) %>%
+  group_by(year,month,variable) %>%
+  summarise(value = mean(value,na.rm = TRUE),
+            .groups = "keep")
 
 all <- bind_rows(df.ERA5.sum.long %>%
                    dplyr::mutate(source = "ERA5"),
-                 df.JRA.sum.long %>%
+                 df.CRUJRA %>%
                    dplyr::select(year,month,variable,value) %>%
-                   dplyr::mutate(source = "JRA")) %>%
+                   dplyr::mutate(source = "CRUJRA")) %>%
   filter(year >= 1994) %>%
   mutate(value = case_when(variable == "pre" ~ value,
                            TRUE ~ value - 273.15))
@@ -82,18 +103,18 @@ all.wide.groups <- all.wide %>%
                              year == 1997 & month %in% 9:12 ~ "1997",
                              year == 1998 & month %in% 1:5 ~ "1997",
 
-                            TRUE ~ NA)) %>%
+                             TRUE ~ NA)) %>%
   filter(!is.na(timing))
 
 
 all.wide %>%
   filter(variable == "tmp") %>%
-  mutate(diff = ERA5 - JRA) %>%
+  mutate(diff = ERA5 - CRUJRA) %>%
   pull(diff) %>%
   mean(na.rm = TRUE)
 
 ggplot(data = all.wide,
-       aes(x = JRA, y = ERA5)) +
+       aes(x = CRUJRA, y = ERA5)) +
   geom_point(size = 0.5, color = "grey") +
   geom_point(data = all.wide.groups,
              aes(color = timing)) +
@@ -111,9 +132,9 @@ ggplot(data = all.wide,
 
 all.wide %>%
   group_by(variable) %>%
-  summarise(r2 = summary(lm(ERA5 ~ JRA))[["r.squared"]],
-            slope = coef(lm(ERA5 ~ JRA))[2],
-            intercept = coef(lm(ERA5 ~ JRA))[1],
+  summarise(r2 = summary(lm(ERA5 ~ CRUJRA))[["r.squared"]],
+            slope = coef(lm(ERA5 ~ CRUJRA))[2],
+            intercept = coef(lm(ERA5 ~ CRUJRA))[1],
             .groups = "keep")
 
 
@@ -147,11 +168,11 @@ all.anomalies.wide.groups <- all.anomalies.wide %>%
                               year == 1997 & month %in% 9:12 ~ "1997",
                               year == 1998 & month %in% 1:5 ~ "1997",
 
-                            TRUE ~ NA)) %>%
+                              TRUE ~ NA)) %>%
   filter(!is.na(timing))
 
 ggplot(data = all.anomalies.wide,
-       aes(x = anomaly.m_JRA, y = anomaly.m_ERA5)) +
+       aes(x = anomaly.m_CRUJRA, y = anomaly.m_ERA5)) +
   geom_point(size = 0.5, color = "grey") +
   geom_point(data = all.anomalies.wide.groups,
              aes(color = timing)) +
@@ -172,9 +193,9 @@ ggplot(data = all.anomalies.wide,
 
 all.anomalies.wide %>%
   group_by(variable) %>%
-  summarise(r2 = summary(lm(anomaly.m_ERA5 ~ anomaly.m_JRA))[["r.squared"]],
-            slope = coef(lm(anomaly.m_ERA5 ~ anomaly.m_JRA))[2],
-            intercept = coef(lm(anomaly.m_ERA5 ~ anomaly.m_JRA))[1],
+  summarise(r2 = summary(lm(anomaly.m_ERA5 ~ anomaly.m_CRUJRA))[["r.squared"]],
+            slope = coef(lm(anomaly.m_ERA5 ~ anomaly.m_CRUJRA))[2],
+            intercept = coef(lm(anomaly.m_ERA5 ~ anomaly.m_CRUJRA))[1],
             .groups = "keep")
 
 

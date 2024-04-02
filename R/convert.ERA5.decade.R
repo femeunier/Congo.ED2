@@ -14,7 +14,7 @@ convert.ERA5.decade <- function(decade,
   vars <- c("t2m","ssrd","tp","strd","d2m")
   for (cyear in years2change){
 
-    ncfile <- file.path(dir,paste0(prefix,"_",cyear,".nc"))
+    ncfile <- paste0(dir_prefix,"_",cyear,".nc")
 
     if (!file.exists(ncfile)) next()
 

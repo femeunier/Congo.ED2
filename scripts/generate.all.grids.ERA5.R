@@ -13,7 +13,6 @@ library(randomForest)
 library(ggpointdensity)
 
 models <- TrENDY.analyses::get.model.names.TRENDY()
-models <- models[seq(length(models),1,-1)]
 
 # options(warn = 0)
 
@@ -75,7 +74,7 @@ for (cmodel in models){
                                 var.names = Var.names,
                                 NULL)
 
-    cgrid <- bind_rowd(cgrid,
+    cgrid <- bind_rows(cgrid,
                        test %>%
       mutate(model = cmodel))
   }

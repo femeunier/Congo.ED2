@@ -12,12 +12,12 @@ library(zoo)
 library(ggridges)
 library(wesanderson)
 
-coord.list <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
-  filter(model == "ORCHIDEE") %>%
+coord.list <- readRDS("./outputs/Coord.ILF.ERA5.RDS") %>%
+  # filter(model == "ORCHIDEE") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",
                           round(lat,digits = 2)))
 
-A <- readRDS("./outputs/Trendy.data.rspld.pred.RDS") %>%
+A <- readRDS("./outputs/Trendy.data.rspld.ERA5.pred.RDS") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",
                           round(lat,digits = 2))) %>%
   filter(lon.lat %in% coord.list[["lon.lat"]])
@@ -32,14 +32,17 @@ Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
                       layer = "amazon_sensulatissimo_gmm_v1")
 
 
-A.MEM.ts <- A.MEM %>%
+A.MEM.ts <- bind_rows(A.MEM %>%
   group_by(year,month) %>%
   summarise(pred.m = mean(pred,na.rm = TRUE),
-            .groups = "keep")
+            .groups = "keep"),
+  data.frame(year = 2024,
+             month = 3,
+             pred.m = NA))
 
 ggplot(data = A.MEM.ts) +
   geom_rect(aes(xmin = 2023+ 1/12,
-                xmax = 2024,
+                xmax = 2024 + 3/12,
                 ymin = -Inf,
                 ymax = Inf), fill = "grey", color = NA, alpha = 0.3) +
   geom_line(aes(x = year + (month - 1/2)/12,
@@ -48,14 +51,22 @@ ggplot(data = A.MEM.ts) +
 
 A.MEM.ts.group <- A.MEM.ts %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
+
                             year == 2016 & month %in% c(1:4) ~ "2015",
-                            year == 2015 & month %in% c(10:12) ~ "2015",
-                            year == 1997 & month %in% 10:12 ~ "1997",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
                             year == 1998 & month %in% 1:5 ~ "1997",
+
                             TRUE ~ NA_character_)) %>%
   mutate(pred.m = case_when(!is.na(groups) ~ pred.m,
                             TRUE ~ NA_real_)) %>%
   mutate(pred.m = case_when((year == 1998 & month == 5) |
+                              (year == 2024 & month == 3) |
                               (year == 2016 & month == 4) ~ NA,
                             TRUE ~ pred.m)) %>%
   arrange(year,month)
@@ -70,22 +81,30 @@ A.MEM.ts.dt <- A.MEM.ts %>%
   mutate(mean.pred = slope*(time) + intercept) %>%
   mutate(detrended = pred.m - mean.pred) %>%
   group_by(month) %>%
-  mutate(mean.month = mean(detrended)) %>%
+  mutate(mean.month = mean(detrended,na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(anomaly = detrended - mean.month) %>%
   group_by(month) %>%
-  mutate(anomaly.m = anomaly/sd(anomaly))
+  mutate(anomaly.m = anomaly/sd(anomaly,na.rm = TRUE))
 
 A.MEM.ts.dt.groups <- A.MEM.ts.dt %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
+
                             year == 2016 & month %in% c(1:4) ~ "2015",
-                            year == 2015 & month %in% c(10:12) ~ "2015",
-                            year == 1997 & month %in% 10:12 ~ "1997",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
                             year == 1998 & month %in% 1:5 ~ "1997",
+
                             TRUE ~ NA_character_)) %>%
   mutate(anomaly.m = case_when(!is.na(groups) ~ anomaly.m,
                                TRUE ~ NA_real_)) %>%
   mutate(anomaly.m = case_when((year == 1998 & month == 5) |
+                                 (year == 2024 & month == 3) |
                                  (year == 2016 & month == 4) ~ NA,
                                TRUE ~ anomaly.m)) %>%
   arrange(year,month)
@@ -94,7 +113,7 @@ A.MEM.ts.dt.groups <- A.MEM.ts.dt %>%
 ################################################################################
 # Now RS
 
-B <- readRDS("./outputs/all.predictions.SIF.ILF.RDS") %>%
+B <- readRDS("./outputs/all.predictions.SIF.ILF.ERA5.RDS") %>%
   filter(year >= 1994) %>%
   filter(product %in% c("SIF","SIF2","VOD","NIR"))
 
@@ -104,10 +123,12 @@ B.MEM <- B %>%
             .groups = "keep")
 
 
-B.MEM.ts <- B.MEM %>%
+B.MEM.ts <- bind_rows(B.MEM %>%
   group_by(year,month) %>%
   summarise(pred.m = mean(pred,na.rm = TRUE),
-            .groups = "keep")
+            .groups = "keep"),
+  data.frame(year = 2024,
+             month = 3,pred.m = NA))
 
 ggplot(data = B.MEM.ts) +
   geom_rect(aes(xmin = 2023+ 1/12,
@@ -120,14 +141,22 @@ ggplot(data = B.MEM.ts) +
 
 B.MEM.ts.group <- B.MEM.ts %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
+
                             year == 2016 & month %in% c(1:4) ~ "2015",
-                            year == 2015 & month %in% c(10:12) ~ "2015",
-                            year == 1997 & month %in% 10:12 ~ "1997",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
                             year == 1998 & month %in% 1:5 ~ "1997",
+
                             TRUE ~ NA_character_)) %>%
   mutate(pred.m = case_when(!is.na(groups) ~ pred.m,
                             TRUE ~ NA_real_)) %>%
   mutate(pred.m = case_when((year == 1998 & month == 5) |
+                              (year == 2023 & month == 3) |
                               (year == 2016 & month == 4) ~ NA,
                             TRUE ~ pred.m)) %>%
   arrange(year,month)
@@ -149,22 +178,30 @@ B.MEM.ts.dt <- B.MEM.ts %>%
   mutate(mean.pred = slope*(time) + intercept) %>%
   mutate(detrended = pred.m - mean.pred) %>%
   group_by(month) %>%
-  mutate(mean.month = mean(detrended)) %>%
+  mutate(mean.month = mean(detrended,na.rm = TRUE)) %>%
   ungroup() %>%
   mutate(anomaly = detrended - mean.month) %>%
   group_by(month) %>%
-  mutate(anomaly.m = anomaly/sd(anomaly))
+  mutate(anomaly.m = anomaly/sd(anomaly,na.rm = TRUE))
 
 B.MEM.ts.dt.groups <- B.MEM.ts.dt %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
+
                             year == 2016 & month %in% c(1:4) ~ "2015",
-                            year == 2015 & month %in% c(10:12) ~ "2015",
-                            year == 1997 & month %in% 10:12 ~ "1997",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
                             year == 1998 & month %in% 1:5 ~ "1997",
+
                             TRUE ~ NA_character_)) %>%
   mutate(anomaly.m = case_when(!is.na(groups) ~ anomaly.m,
                                TRUE ~ NA_real_)) %>%
   mutate(anomaly.m = case_when((year == 1998 & month == 5) |
+                                 (year == 2024 & month == 3) |
                                  (year == 2016 & month == 4) ~ NA,
                                TRUE ~ anomaly.m)) %>%
   arrange(year,month)
@@ -180,12 +217,12 @@ all.MEM.ts.dt.groups <- bind_rows(A.MEM.ts.dt.groups %>% mutate(source = "Trendy
 SC.av <- all.MEM.ts %>%
   filter(year %in% 1994:2023) %>%
   group_by(source,month) %>%
-  summarise(pred.m = mean(pred.m),
+  summarise(pred.m = mean(pred.m,na.rm = TRUE),
             .groups = "keep") %>%
   left_join(all.MEM.ts.dt %>%
               mutate(pred.sd = anomaly/anomaly.m)  %>%
               group_by(source,month) %>%
-              summarise(pred.sd = mean(pred.sd),
+              summarise(pred.sd = mean(pred.sd,na.rm = TRUE),
                         .groups = "keep") %>%
               dplyr::select(source, month,pred.sd),
             by = c("source","month"))
@@ -241,8 +278,8 @@ ggplot(data = SC.av,
 
 SC.av %>%
   group_by(source) %>%
-  summarise(m = mean(pred.m),
-            m2 = mean(pred.sd))
+  summarise(m = mean(pred.m,na.rm = TRUE),
+            m2 = mean(pred.sd,na.rm = TRUE))
 
 
 
@@ -281,5 +318,6 @@ ggplot() +
 all.MEM.ts.dt.groups %>%
   filter(!is.na(groups)) %>%
   group_by(source, groups) %>%
-  summarise(m = mean(anomaly.m,na.rm = TRUE))
+  summarise(m = mean(anomaly.m,
+                     na.rm = TRUE))
 

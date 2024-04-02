@@ -5,7 +5,6 @@ library(dplyr)
 library(ggplot2)
 library(zoo)
 
-
 Window = 6
 
 RS <- readRDS("./outputs/RSanomalies.ERA5.RDS") %>%
@@ -55,14 +54,36 @@ all %>%
   mutate(time = year + (month - 1/2)/12) %>%
   group_by(source) %>%
   summarise(r2 = summary(lm(formula = pred.m ~ time))[["r.squared"]],
-            pval = summary(lm(formula = pred.m ~ time))[["coefficients"]][2,4])
+            intercept = coef(lm(formula = pred.m ~ time))[1],
+            slope = coef(lm(formula = pred.m ~ time))[2],
+            pval = summary(lm(formula = pred.m ~ time))[["coefficients"]][2,4]) %>%
+  mutate(Delta_t = 2020 - 1980,
+         Delta_GPP =  (2020 - 1980)*slope,
+         GPP = intercept + 2000*slope) %>%
+  mutate(Delta = 100*(Delta_GPP/GPP/(Delta_t/10)))
+
+
+all %>%
+  filter(year <= 2010,year >= 2000) %>%
+  mutate(time = year + (month - 1/2)/12) %>%
+  group_by(source) %>%
+  summarise(r2 = summary(lm(formula = pred.m ~ time))[["r.squared"]],
+            intercept = coef(lm(formula = pred.m ~ time))[1],
+            slope = coef(lm(formula = pred.m ~ time))[2],
+            pval = summary(lm(formula = pred.m ~ time))[["coefficients"]][2,4]) %>%
+  mutate(Delta_t = 2020 - 1980,
+         Delta_GPP =  (2020 - 1980)*slope,
+         GPP = intercept + 2000*slope) %>%
+  mutate(Delta = 100*(Delta_GPP/GPP/(Delta_t/10)))
 
 
 
 droughts <- data.frame(x1 = c(1997 + 9/12,
+                              # 2010 + 7/12,
                               2015 + 8/12,
                               2023 + 7/12) + 0.5/12,
                        x2 = c(1998 + 4/12 ,
+                              # 2010 + 10/12,
                               2016 + 3/12,
                               2024 + 2/12) + 0.5/12)
 
@@ -75,7 +96,7 @@ ggplot() +
 
   geom_point(data = all,
              aes(x = year + (month - 1/2)/12,
-                 y = pred.m,
+                 y = pred.m*10,
                  color = source),
              size = 0.2) +
 
@@ -87,16 +108,16 @@ ggplot() +
 
   geom_line(data = all,
             aes(x = year + (month - 1/2)/12,
-                y = mean.pred,
+                y = mean.pred*10,
                 color = source), linetype = 2) +
 
   geom_line(data = all,
             aes(x = year + (month - 1/2)/12,
-                y = pred.m.rm,
+                y = pred.m.rm*10,
                 color = source)) +
-  scale_color_manual(values = c("darkblue","black")) +
+  scale_color_manual(values = c("#5ab4ac","#d8b365")) +
   labs(x = "",y = "", color = "") +
-  scale_y_continuous(limits = c(2.5,3.5)) +
+  scale_y_continuous(limits = c(2.5,3.5)*10) +
   # scale_x_continuous(limits = c(2023,2024)) +
   guides(color = FALSE) +
   theme_bw() +
@@ -177,9 +198,10 @@ ggplot() +
   theme_bw() +
   geom_hline(linetype = 2, color = "black",
              yintercept = 0) +
-  scale_color_manual(values = c("darkblue","black")) +
+  scale_color_manual(values = c("#5ab4ac","#d8b365")) +
   labs(x = "",y = "", color = "") +
   scale_y_continuous(limits = c(-5,2.5)) +
+  # scale_x_continuous(limits = c(2023,2024.5)) +
   guides(color = FALSE) +
   theme(text = element_text(size = 20))
 
@@ -190,10 +212,40 @@ all %>%
   summarise(m = mean(anomaly.m))
 
 all %>%
-  group_by(source) %>%
+  filter(source == "RS") %>%
+  arrange(anomaly.m) %>%
   filter(year == 2023,
-         month %in% c(7:12)) %>%
+         month %in% c(10)) %>%
   summarise(m = mean(anomaly.m))
+
+all %>%
+  group_by(source) %>%
+  filter((year == 2023 & month %in% c(7:12)) |
+           (year == 2024)) %>%
+  summarise(gpp = 10*mean(pred.m),
+            anomaly = 10*mean(anomaly),
+            anomaly.m = mean(anomaly.m))
+
+all %>%
+  group_by(source) %>%
+  filter(year == 2023 & month == 10) %>%
+  summarise(gpp = 10*mean(pred.m),
+            anomaly = 10*mean(anomaly),
+            anomaly.m = mean(anomaly.m))
+
+all %>%
+  filter(month == 10) %>%
+  group_by(source) %>%
+  filter(source == "RS") %>%
+  arrange(pred.m)
+
+all %>%
+  group_by(source) %>%
+  filter(year %in% (1994:2023),
+         month %in% c(1,2,7:12)) %>%
+  summarise(gpp = mean(pred.m),
+            anomaly = mean(anomaly),
+            anomaly.m = mean(anomaly.m))
 
 all %>%
   filter(source == "Trendy",
@@ -232,8 +284,8 @@ summary(lm(data = all.wide,
            formula = anomaly.m.rm_Trendy ~ anomaly.m.rm_RS))
 
 ggplot(data = all.wide,
-       aes(x = pred.m.rm_RS,
-           y = pred.m.rm_Trendy)) +
+       aes(x = pred.m.rm_RS*10,
+           y = pred.m.rm_Trendy*10)) +
   geom_point(color = "darkgrey",
              size = 0.5) +
   geom_abline(slope = 1,
@@ -243,8 +295,8 @@ ggplot(data = all.wide,
               color = "black") +
   theme_bw() +
   labs(x = "",y = "") +
-  scale_x_continuous(breaks = c(3,3.1,3.2)) +
-  scale_y_continuous(breaks = c(2.9,3,3.1,3.2)) +
+  # scale_x_continuous(breaks = c(3,3.1,3.2)) +
+  # scale_y_continuous(breaks = c(2.9,3,3.1,3.2)) +
   theme(text = element_text(size = 24))
 
 summary(lm(data = all.wide,

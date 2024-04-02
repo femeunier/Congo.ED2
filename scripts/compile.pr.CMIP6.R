@@ -12,7 +12,7 @@ library(lubridate)
 library(tidyr)
 
 scenarios = c("historical","ssp126","ssp245","ssp370","ssp585")
-variable = "tas"
+variable = "pr"
 variants = "r1i1p1f1"
 
 overwrite = TRUE
@@ -124,6 +124,8 @@ df.selected <- df.all.wide %>%
          ssp585) %>%
   filter(model != "IITM-ESM")
 
+
+
 sites <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
   filter(model == "ORCHIDEE") %>%
   filter(is.undisturbed.factor == 1)
@@ -164,7 +166,7 @@ for (iscenario in seq(1,length(scenarios))){
     cmodel <- models[imodel]
     print(cmodel)
 
-    OP.file <- paste0("./outputs/","df.monthly.tas.",scenarios[iscenario],".",models[imodel],".RDS")
+    OP.file <- paste0("./outputs/","df.monthly.pr.",scenarios[iscenario],".",models[imodel],".RDS")
 
     if (!overwrite & file.exists(OP.file)){
       next()
@@ -199,9 +201,9 @@ for (iscenario in seq(1,length(scenarios))){
 
         df.dist <- bind_rows(df.dist,
                              search %>%
-          mutate(dist = sqrt((lat-clat)**2 + (lon-clon)**2)) %>%
-          arrange(dist) %>%
-          slice_head(n = 1))
+                               mutate(dist = sqrt((lat-clat)**2 + (lon-clon)**2)) %>%
+                               arrange(dist) %>%
+                               slice_head(n = 1))
       }
 
       df.dist <- df.dist %>%
@@ -220,6 +222,5 @@ for (iscenario in seq(1,length(scenarios))){
   }
 }
 
-
-# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/compile.tas.CMIP6.R hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R
-# scp /home/femeunier/Documents/projects/Congo.ED2/outputs/ILF2020.df hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/
+# scp /home/femeunier/Documents/projects/Congo.ED2/outputs/Amazon.coord.ILF.RDS hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/
+# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/compile.pr.CMIP6.R hpc:/kyukon/data/gent/vo/000/gvo00074/felicien/R

@@ -45,10 +45,15 @@ Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
                       layer = "amazon_sensulatissimo_gmm_v1")
 
 
-ggplot(data = climate.select %>%
-         filter(variable == "pre",
-                year == 2023,
-                month == 10)) +
+df2plot <- climate.select %>%
+  filter((year == 2024) |
+           (year == 2023 & month >= 7)) %>%
+  group_by(variable,lat,lon) %>%
+  summarise(anomaly.m = mean(anomaly.m,na.rm = TRUE),
+            .groups = "keep")
+
+
+ggplot(data = df2plot ) +
   geom_raster(aes(x=lon,y = lat,
                   fill = anomaly.m),alpha = 1) +
   geom_sf(data = world,fill = NA, color = "grey") +
@@ -61,28 +66,7 @@ ggplot(data = climate.select %>%
                        low = "darkblue",mid = "grey",high = "darkred") +
   labs(x = "",y = "") +
   theme_map() +
-  guides(fill = "none") +
-  theme(text = element_text(size = 20),
-        strip.background = element_blank(),
-        strip.text = element_blank())
-
-
-ggplot(data = climate.select %>%
-         filter(variable == "tmp",
-                year == 2023,
-                month == 10)) +
-  geom_raster(aes(x=lon,y = lat,
-                  fill = anomaly.m),alpha = 1) +
-  geom_sf(data = world,fill = NA, color = "grey") +
-  geom_sf(data = Amazon.shp,fill = NA, color = "black") +
-
-  coord_sf(xlim = c(-85, -30), ylim = c(-25, 10), expand = FALSE) +
-  scale_fill_gradient2(limits = c(-3,3),
-                       oob = scales::squish,
-                       midpoint = 0,
-                       low = "darkblue",mid = "grey",high = "darkred") +
-  labs(x = "",y = "") +
-  theme_map() +
+  facet_wrap(~variable) +
   guides(fill = "none") +
   theme(text = element_text(size = 20),
         strip.background = element_blank(),
@@ -90,21 +74,19 @@ ggplot(data = climate.select %>%
 
 
 
-ggplot(data = climate.select %>%
-         filter(year == 2023,
-                month == 10),
+ggplot(data = df2plot,
        aes(x = anomaly.m,
            y = interaction(variable),
            fill = stat(x))) +
   geom_density_ridges_gradient(show.legend = FALSE, alpha = 1,
                                scale = 1.5) +
-  scale_fill_gradient2(limits = c(-10,5)*1,
+  scale_fill_gradient2(limits = c(-3,3)*1,
                        oob = scales::squish,
                        midpoint = 0,
                        low = "darkblue",mid = "grey",high = "darkred") +
   geom_vline(xintercept = 0,linetype = 2) +
-  facet_wrap(~ year, nrow = 1) +
-  scale_x_continuous(limits = c(-3,3)) +
+  # facet_wrap(~ variable, nrow = 1) +
+  scale_x_continuous(limits = c(-3,5)) +
   theme_minimal() +
   theme(text = element_text(size = 20),
         panel.grid = element_blank())

@@ -13,11 +13,16 @@ A %>%
 MEM.area.anomalies.wide <- A  %>%
   filter(year <= 2021)
 
-droughts <- data.frame(x1 = c(1997,2015,2023) + 0.5/12,
-                       x2 = c(1998,2016,2023) +
-                         11.5/12)
+droughts <- data.frame(x1 = c(1997 + 9/12,
+                              # 2010 + 7/12,
+                              2015 + 8/12,
+                              2023 + 7/12) + 0.5/12,
+                       x2 = c(1998 + 4/12 ,
+                              # 2010 + 10/12,
+                              2016 + 3/12,
+                              2024 + 2/12) + 0.5/12)
 
-Window = 12
+Window = 6
 
 A2plot <- A %>%
   arrange(year,month) %>%
@@ -93,7 +98,7 @@ MEM2plot <- MEM.area.anomalies.wide %>%
   mutate(timing = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
                                        year == 2016 & month %in% c(1:3) ~ "2015",
                                        year == 2015 & month %in% c(10:12) ~ "2015",
-                                       year == 1997 & month %in% 10:12 ~ "1997",
+                                       year == 1997 & month %in% 9:12 ~ "1997",
                                        year == 1998 & month %in% 1:4 ~ "1997",
                                        TRUE ~ NA_character_)) %>%
   filter(year >= 1994)

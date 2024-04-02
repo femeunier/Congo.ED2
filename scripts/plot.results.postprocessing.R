@@ -88,7 +88,6 @@ for (cvar in vars) {
 }
 
 # all.shap_long <- readRDS(paste0("./outputs/all.shap_long.",suffix,".RDS"))
-# df.shape.scores <- readRDS(paste0("./outputs/df.shape.scores.",suffix,".RDS"))
 
 Amazon.shp <- read_sf(dsn = "/home/femeunier/Downloads/AmazonBasinLimits/",
                       layer = "amazon_sensulatissimo_gmm_v1")

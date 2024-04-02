@@ -20,7 +20,7 @@ GPPproducts2keep <- c("VOD","SIF","SIF2","NIR")
 RS.data <- bind_rows(readRDS("./outputs/GPP.products.Amazon.ILF.sum.RDS")) %>%
   filter(model %in% GPPproducts2keep) %>%
   rename(product = model) %>%
-  filter(year %in% 2001:2019)
+  filter(year %in% 2001:2018)
 products <- sort(unique(RS.data$product))
 
 RS.data.sum <- RS.data %>%
@@ -96,7 +96,7 @@ ggplot() +
 
 Trendy.data <- bind_rows(readRDS("./outputs/Amazon.mean.JRA.historical.IFL.sum.RDS")) %>%
   filter(var == "gpp") %>%
-  filter(year %in% 2001:2019)
+  filter(year %in% 2001:2018)
 
 # MEM
 Trendy.data.sum <- Trendy.data %>%

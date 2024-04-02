@@ -12,12 +12,12 @@ library(zoo)
 library(ggridges)
 library(wesanderson)
 
-coord.list <-  readRDS("./outputs/Coord.ILF.ERA5.RDS") %>%
-  # filter(model == "ORCHIDEE") %>%
+coord.list <-  readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
+  filter(model == "ORCHIDEE") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",
                           round(lat,digits = 2)))
 
-A <- readRDS("./outputs/Trendy.data.rspld.ERA5.pred.RDS") %>%
+A <- readRDS("./outputs/Trendy.data.rspld.pred.RDS") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",
                           round(lat,digits = 2))) %>%
   filter(lon.lat %in% coord.list[["lon.lat"]])
@@ -41,10 +41,17 @@ A.MEM.ts <- A.MEM %>%
 
 A.MEM.ts.group <- A.MEM.ts %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
+                            year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
+
                             year == 2016 & month %in% c(1:4) ~ "2015",
-                            year == 2015 & month %in% c(10:12) ~ "2015",
-                            year == 1997 & month %in% 10:12 ~ "1997",
+                            year == 2015 & month %in% c(8:12) ~ "2015",
+
+                            year == 1997 & month %in% 9:12 ~ "1997",
                             year == 1998 & month %in% 1:5 ~ "1997",
+
                             TRUE ~ NA_character_)) %>%
   mutate(pred.m = case_when(!is.na(groups) ~ pred.m,
                             TRUE ~ NA_real_)) %>%
@@ -76,7 +83,7 @@ A.MEM.dt.sum <- A.MEM.dt %>%
 
 ################################################################################
 
-B <- readRDS("./outputs/all.predictions.SIF.ILF.ERA5.RDS") %>%
+B <- readRDS("./outputs/all.predictions.SIF.ILF.RDS") %>%
   filter(year >= 1994) %>%
   filter(product %in% c("SIF","SIF2","VOD","NIR"))
 
@@ -232,9 +239,18 @@ all.MEM.dt %>%
   filter((year == 2023 & month == 10) |
            (year == 2016 & month == 1) |
            (year == 1998 & month == 3)) %>%
-  group_by(year,source) %>%
+  group_by(source,year) %>%
   summarise(frac = sum(anomaly.m < -0)/length(anomaly.m)*100,
             .groups = "keep")
+
+
+all.MEM.dt %>%
+  group_by(source,year,month) %>%
+  summarise(frac = sum(anomaly.m < -3)/length(anomaly.m)*100,
+            .groups = "keep") %>%
+  group_by(source) %>%
+  arrange(desc(frac)) %>%
+  slice_head(n = 3)
 
 all.MEM.dt %>%
   group_by(source, year, month) %>%
@@ -263,6 +279,9 @@ all.MEM.dt %>%
 all.MEM.dt.groups <- all.MEM.dt %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
                             year == 2024 & month %in% c(1:3) ~ "2023",
+
+                            # year == 2009 & month %in% c(8:12) ~ "2010",
+                            # year == 2010 & month %in% c(1:5) ~ "2010",
 
                             year == 2016 & month %in% c(1:4) ~ "2015",
                             year == 2015 & month %in% c(8:12) ~ "2015",
@@ -297,6 +316,32 @@ ggplot(data = all.MEM.dt.groups.sum %>%
   theme(text = element_text(size = 20),
         strip.background = element_blank(),
         strip.text = element_blank())
+
+df2plot.diff <- all.MEM.dt.groups.sum %>%
+  filter(groups == "2023") %>%
+  pivot_wider(names_from = source,
+              values_from = anomaly.m) %>%
+  mutate(diff = RS - Trendy)
+
+ggplot(data = df2plot.diff) +
+  geom_tile(aes(x=lon,y = lat,
+                fill = diff),alpha = 1) +
+  geom_sf(data = world,fill = NA, color = "grey") +
+  geom_sf(data = Amazon.shp,fill = NA, color = "black") +
+
+  coord_sf(xlim = c(-85, -30), ylim = c(-25, 10), expand = FALSE) +
+  scale_fill_gradient2(limits = c(-2,1)*1.5,
+                       oob = scales::squish,
+                       midpoint = 0,
+                       low = "darkred",mid = "grey",high = "darkgreen") +
+  labs(x = "",y = "") +
+  # facet_wrap(~ source) +
+  theme_map() +
+  guides(fill = "none") +
+  theme(text = element_text(size = 20),
+        strip.background = element_blank(),
+        strip.text = element_blank())
+
 
 ggplot(data = all.MEM.dt.groups.sum,
        aes(x = anomaly.m,
