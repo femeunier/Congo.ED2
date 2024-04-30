@@ -38,12 +38,6 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                                "year","month",
                                "model",climate.vars))
 
-  if (!all((all.climate.vars %in% climate.vars))){
-    all.grids <- readRDS(grid.file) %>%
-      dplyr::select(any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
-
-  }
-
 
   if (scenario == "S3"){
     all.grids.transitions <- readRDS(grid.file.transition) %>%
@@ -84,8 +78,14 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                 by = c("year","lat","lon","month")) %>%
       left_join(dataC02.all,
                 by = c("year")) %>%
-      ungroup() %>%
-      dplyr::select(-c(all.climate.vars))
+      ungroup()
+
+    if (!all((all.climate.vars %in% climate.vars))){
+      sink.vs.climate <- sink.vs.climate %>%
+        dplyr::select(any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
+
+    }
+
 
 
   } else if (scenario == "S3"){
