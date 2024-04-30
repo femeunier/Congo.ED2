@@ -171,8 +171,8 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                       ccdf %>%
                         dplyr::select(!!cvar)) %>%
       na.omit() %>%
-      group_by(lat,lon) %>%
-      filter(!all(get(cvar) == 0)) %>%
+      # group_by(lat,lon) %>%
+      # filter(!all(get(cvar) == 0)) %>%
       ungroup()
 
     op.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/",
