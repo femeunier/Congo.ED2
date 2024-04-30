@@ -78,6 +78,11 @@ data.mod <- data.mod %>%
 
 Window = 6
 
+# stop()
+#
+# saveRDS(data.mod,
+#         "~/Documents/projects/SIAmazon/data/CMIP6.tas.RDS")
+
 data.mod.anomalies <- data.mod %>%
   filter((year >= 1994 & scenario != "historical") |
            ((year %in% 1985:2014 & scenario == "historical")))%>%
@@ -451,5 +456,5 @@ ggplot(data = all2plot2) +
   guides(fill = "none") +
 
   theme_bw() +
-  theme(text = element_text(size = 20))
+  theme(text = element_text(size = 14))
 

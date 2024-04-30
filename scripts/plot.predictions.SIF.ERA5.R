@@ -11,7 +11,6 @@ library(sf)
 #           "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/*.predictions.SIF.ILF.ERA5.RDS",
 #           "./outputs"))
 
-
 Window = 6
 
 df.all.pred <- readRDS("./outputs/all.predictions.SIF.ILF.ERA5.RDS") %>%
@@ -129,3 +128,5 @@ ggplot() +
 
 saveRDS(df.all.pred.MEM.anomaly,
         "./outputs/RSanomalies.ERA5.RDS")
+
+# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/plot.predictions.SIF.ERA5.R hpc:/data/gent/vo/000/gvo00074/felicien/R/

@@ -7,7 +7,8 @@ library(ggthemes)
 library(sf)
 library(zoo)
 
-products <- c("SIF2","VOD","NIR","SIF")
+products <- c("VOD")
+
 
 df.all <- bind_rows(list(
 
@@ -61,6 +62,10 @@ dataC02.all <- data.frame(year = sort(unique(c(dataC02$year,2020:2024)))) %>%
             by = c("year")) %>%
   mutate(CO2 = na.spline(CO2,method = "natural"))
 
+climate <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
+  left_join(dataC02.all,
+            by = c("year"))
+
 xgb_trcontrol <- caret::trainControl(
   method = "cv",
   number = 8,
@@ -83,16 +88,9 @@ xgb_grid <- base::expand.grid(
 frac.train = 0.6
 
 
-for (cproduct in c(products)){
+for (cproduct in products){
 
   print(cproduct)
-
-  climate <- readRDS(paste0("data/grid.",cproduct,".ERA5.RDS")) %>%
-    left_join(dataC02.all,
-              by = c("year")) %>%
-    dplyr::select(-any_of(c("product",
-                          "model",
-                          "year == cyear")))
 
   GPPproduct.coords <- readRDS("./outputs/Amazon.coord.GPP.products.ILF.RDS") %>%
     filter(model == cproduct)
@@ -141,6 +139,7 @@ for (cproduct in c(products)){
   #                       breaks = c(2.5,3,3.5)) +
   #   theme(text = element_text(size = 20),
   #         legend.position = "top")
+
 
   in_out <- GPP.products %>%
     filter(!is.na(GPP)) %>%
@@ -232,6 +231,4 @@ for (cproduct in c(products)){
           op.file)
 
 }
-
-# scp /home/femeunier/Documents/projects/Congo.ED2/scripts/test.XGBoost.SIF.ERA5.R hpc:/data/gent/vo/000/gvo00074/felicien/R/
 

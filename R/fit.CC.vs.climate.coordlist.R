@@ -8,7 +8,10 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                                         overwrite = TRUE,
                                         transition.suffix = "transitions",
                                         CC.suffix = "CC.pantropical.v11",
-                                        climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
+                                        climate.vars = c("lon","lat",
+                                                         "year","month",
+                                                         "model","tmp","tmin",
+                                                         "tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
   if (!file.exists(coord.list)){
     stop("Coord list does not exist")
@@ -35,10 +38,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     dplyr::select(-starts_with("time.unit"))
 
   all.grids <- readRDS(grid.file) %>%
-    dplyr::select(c("lon","lat",
-                    "year","month",
-                    "model",
-                    climate.vars))
+    dplyr::select(any_of(climate.vars))
 
   if (scenario == "S3"){
     all.grids.transitions <- readRDS(grid.file.transition) %>%

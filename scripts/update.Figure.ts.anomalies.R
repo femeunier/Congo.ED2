@@ -7,6 +7,15 @@ library(zoo)
 
 Window = 6
 
+files <- c("RSanomalies.ERA5.RDS",
+           "Trendy.data.rspld.ERA5.pred.RDS")
+
+# for (cfile in files){
+#   system2("scp",
+#           c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
+#             "./outputs/"))
+# }
+
 RS <- readRDS("./outputs/RSanomalies.ERA5.RDS") %>%
   dplyr::select(year,month,pred.m,anomaly,anomaly.m,mean.pred) %>%
   mutate(source = "RS")
@@ -41,8 +50,8 @@ all <- bind_rows(RS,
                  Trendy) %>%
   group_by(source) %>%
   mutate(anomaly.rm = rollapply(anomaly, width=Window,
-                                  FUN=function(x) mean(x, na.rm=TRUE),
-                                  partial=TRUE, fill=NA, align="center"),
+                                FUN=function(x) mean(x, na.rm=TRUE),
+                                partial=TRUE, fill=NA, align="center"),
          anomaly.m.rm = rollapply(anomaly.m, width=Window,
                                   FUN=function(x) mean(x, na.rm=TRUE),
                                   partial=TRUE, fill=NA, align="center"),
@@ -85,7 +94,7 @@ droughts <- data.frame(x1 = c(1997 + 9/12,
                        x2 = c(1998 + 4/12 ,
                               # 2010 + 10/12,
                               2016 + 3/12,
-                              2024 + 2/12) + 0.5/12)
+                              2024 + 4/12) + 0.5/12)
 
 ggplot() +
 
@@ -118,57 +127,13 @@ ggplot() +
   scale_color_manual(values = c("#5ab4ac","#d8b365")) +
   labs(x = "",y = "", color = "") +
   scale_y_continuous(limits = c(2.5,3.5)*10) +
-  # scale_x_continuous(limits = c(2023,2024)) +
+  scale_x_continuous(limits = c(1994,2024.5)) +
   guides(color = FALSE) +
   theme_bw() +
   theme(text = element_text(size = 20))
 
 
 
-
-droughts <- data.frame(x1 = c(1997 + 9/12,
-                              # 2010 + 7/12,
-                              2015 + 8/12) + 0.5/12,
-                       x2 = c(1998 + 4/12 ,
-                              # 2010 + 10/12,
-                              2016 + 3/12) + 0.5/12)
-
-ggplot() +
-
-  geom_rect(data = droughts,
-            aes(xmin = x1, xmax = x2,
-                ymin = -Inf, ymax = Inf), color = NA,
-            alpha = 0.3, fill = "grey") +
-
-  geom_point(data = all %>%
-               filter(year < 2022,
-                      source == "Trendy"),
-             aes(x = year + (month - 1/2)/12,
-                 y = pred.m*10,
-                 color = source),
-             size = 0.2) +
-
-
-  geom_line(data = all %>%
-              filter(year < 2022,
-                     source == "Trendy"),
-            aes(x = year + (month - 1/2)/12,
-                y = mean.pred*10,
-                color = source), linetype = 2) +
-
-  geom_line(data = all %>%
-              filter(year < 2022,
-                     source == "Trendy"),
-            aes(x = year + (month - 1/2)/12,
-                y = pred.m.rm*10,
-                color = source)) +
-  scale_color_manual(values = c("#d8b365")) +
-  labs(x = "",y = "", color = "") +
-  scale_y_continuous(limits = c(2.5,3.5)*10) +
-  # scale_x_continuous(limits = c(2023,2024)) +
-  guides(color = FALSE) +
-  theme_bw() +
-  theme(text = element_text(size = 20))
 
 A <- all %>%
   filter(year == 2023,
@@ -199,11 +164,11 @@ B %>%
 
 
 (all %>%
-  filter(source == "RS",
-         pred.m <= (A %>%
-                      filter(source == "RS",
-                             month == 10) %>%
-                      pull(mean2023) %>% min()))) %>%
+    filter(source == "RS",
+           pred.m <= (A %>%
+                        filter(source == "RS",
+                               month == 10) %>%
+                        pull(mean2023) %>% min()))) %>%
   arrange(desc(year),desc(month))
 
 all %>%
@@ -212,10 +177,10 @@ all %>%
   slice_head(n = 3)
 
 (all %>%
-       filter(source == "Trendy",
-              pred.m <= (A %>%
-                           filter(source == "Trendy") %>%
-                           pull(mean2023) %>% min())))
+    filter(source == "Trendy",
+           pred.m <= (A %>%
+                        filter(source == "Trendy") %>%
+                        pull(mean2023) %>% min())))
 
 
 ggplot() +
@@ -248,7 +213,7 @@ ggplot() +
   scale_color_manual(values = c("#5ab4ac","#d8b365")) +
   labs(x = "",y = "", color = "") +
   scale_y_continuous(limits = c(-5,2.5)) +
-  # scale_x_continuous(limits = c(2023,2024.5)) +
+  scale_x_continuous(limits = c(1994,2024.5)) +
   guides(color = FALSE) +
   theme(text = element_text(size = 20))
 
@@ -365,7 +330,7 @@ ggplot(data = all.sum) +
                 ymin = -Inf, ymax = Inf), color = NA,
             alpha = 0.3, fill = "grey") +
 
-  geom_point(aes(x = year + (month - 1/2)/12,
+  geom_line(aes(x = year + (month - 1/2)/12,
                  y = anomaly.m),
              size = 0.2) +
 

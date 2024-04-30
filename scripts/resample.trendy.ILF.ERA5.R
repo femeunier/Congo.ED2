@@ -8,12 +8,12 @@ library(ggplot2)
 files <- c("GPP.products.Amazon.ILF.RDS",
            "Amazon.mean.ERA5.IFL.RDS")
 
-for (cfile in files){
-  system2("rsync",
-          c("-avz",
-            paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
-            "./outputs/"))
-}
+# for (cfile in files){
+#   system2("rsync",
+#           c("-avz",
+#             paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
+#             "./outputs/"))
+# }
 
 ################################################################################
 
@@ -41,14 +41,19 @@ Trendy.data.sum <- Trendy.data %>%
             obs.m = mean(obs),
             .groups = "keep")
 
-ggplot(data = Trendy.data.sum %>%
-         filter(model == "LPJ")) +
+Trendy.data.sum.sum <- Trendy.data.sum %>%
+  group_by(var,year,basin,month) %>%
+  summarise(pred.m = mean(pred.m),
+            obs.m = mean(obs.m),
+            .groups = "keep")
+
+ggplot(data = Trendy.data.sum.sum) +
   geom_line(aes(x = year + (month - 1/2)/12,
-                y = obs.m)) +
+                y = pred.m)) +
   geom_point(aes(x = year + (month - 1/2)/12,
-                 y = pred.m), linetype = 2) +
+                 y = obs.m ), linetype = 2) +
   theme_bw() +
-  scale_x_continuous(limits = c(2019,2025))
+  scale_x_continuous(limits = c(2000,2025))
 
 models <- sort(unique(Trendy.data$model))
 
