@@ -155,25 +155,26 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       prob = c(as.numeric(frac.train),(1-as.numeric(frac.train))/2,(1-as.numeric(frac.train))/2))) %>%
     ungroup()
 
+  if (!all((all.climate.vars %in% climate.vars))){
+    cccdf <- cccdf %>%
+      dplyr::select(-any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
+
+  }
+
 
   for (cvar in vars){
 
     print(paste0("- ",cvar))
 
-    all.data <- cbind(cccdf %>%
-                        dplyr::select(-c(id)),
-                      ccdf %>%
-                        dplyr::select(!!cvar)) %>%
-      na.omit() %>%
-      group_by(lat,lon) %>%
-      filter(!all(get(cvar) == 0)) %>%
-      ungroup()
+    # all.data <- cbind(cccdf %>%
+    #                     dplyr::select(-c(id)),
+    #                   ccdf %>%
+    #                     dplyr::select(!!cvar)) %>%
+    #   na.omit() %>%
+    #   group_by(lat,lon) %>%
+    #   filter(!all(get(cvar) == 0)) %>%
+    #   ungroup()
 
-    if (!all((all.climate.vars %in% climate.vars))){
-      all.data <- all.data %>%
-        dplyr::select(-any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
-
-    }
 
     op.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/",
                       xgb.model.prefix,".",cvar,".RDS")
