@@ -84,7 +84,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
 
     if (!all((all.climate.vars %in% climate.vars))){
       sink.vs.climate <- sink.vs.climate %>%
-        dplyr::select(any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
+        dplyr::select(-any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
 
     }
 
