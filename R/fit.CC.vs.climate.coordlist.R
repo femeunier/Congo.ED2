@@ -71,12 +71,16 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
 
   if (scenario == "S2"){
 
+
+    commonvars <- intersect(colnames(modelled.sink),
+                            colnames(all.grids))
+
     sink.vs.climate <- modelled.sink %>%
       left_join(all.grids %>%
                   dplyr::select(-starts_with("model")) %>%
                   mutate(lat = round(lat,digits = 2),
                          lon = round(lon,digits = 2)),
-                by = c("year","lat","lon","month")) %>%
+                by = commonvars) %>%
       left_join(dataC02.all,
                 by = c("year")) %>%
       ungroup()
