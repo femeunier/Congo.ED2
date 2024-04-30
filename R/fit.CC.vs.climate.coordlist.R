@@ -8,10 +8,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                                         overwrite = TRUE,
                                         transition.suffix = "transitions",
                                         CC.suffix = "CC.pantropical.v11",
-                                        climate.vars = c("lon","lat",
-                                                         "year","month",
-                                                         "model","tmp","tmin",
-                                                         "tmax","spfh","VPD","pre","dswrf","dlwrf")){
+                                        climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
   if (!file.exists(coord.list)){
     stop("Coord list does not exist")
@@ -37,8 +34,12 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
   all.models <- readRDS(model.file) %>%
     dplyr::select(-starts_with("time.unit"))
 
+  all.climate.vars <- unique(c("lon","lat",
+                               "year","month",
+                               "model",climate.vars))
+
   all.grids <- readRDS(grid.file) %>%
-    dplyr::select(any_of(climate.vars))
+    dplyr::select(any_of(!(climate.vars %in% all.climate.vars)))
 
   if (scenario == "S3"){
     all.grids.transitions <- readRDS(grid.file.transition) %>%
@@ -71,23 +72,18 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
 
   if (scenario == "S2"){
 
-
-    commonvars <- intersect(colnames(modelled.sink),
-                            colnames(all.grids))
-
-    if (all(c("lat","lon") %in% commonvars)){
-      all.grids <- all.grids %>%
-        mutate(lat = round(lat,digits = 2),
-               lon = round(lon,digits = 2))
-    }
-
     sink.vs.climate <- modelled.sink %>%
       left_join(all.grids %>%
-                  dplyr::select(-starts_with("model")),
-                by = commonvars) %>%
+                  dplyr::select(-starts_with("model")) %>%
+                  mutate(lat = round(lat,digits = 2),
+                         lon = round(lon,digits = 2)),
+                by = c("year","lat","lon","month")) %>%
       left_join(dataC02.all,
                 by = c("year")) %>%
-      ungroup()
+      ungroup() %>%
+      dplyr::select(-c(all.climate.vars))
+
+
   } else if (scenario == "S3"){
 
     sink.vs.climate <- modelled.sink %>%
