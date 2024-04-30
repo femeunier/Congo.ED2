@@ -40,7 +40,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
 
   if (!all((all.climate.vars %in% climate.vars))){
     all.grids <- readRDS(grid.file) %>%
-      dplyr::select(any_of(!(all.climate.vars %in% climate.vars)))
+      dplyr::select(any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
 
   }
 
