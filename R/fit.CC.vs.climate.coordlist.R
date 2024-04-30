@@ -82,12 +82,6 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                 by = c("year")) %>%
       ungroup()
 
-    if (!all((all.climate.vars %in% climate.vars))){
-      sink.vs.climate <- sink.vs.climate %>%
-        dplyr::select(-any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
-
-    }
-
 
 
   } else if (scenario == "S3"){
@@ -174,6 +168,12 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       group_by(lat,lon) %>%
       filter(!all(get(cvar) == 0)) %>%
       ungroup()
+
+    if (!all((all.climate.vars %in% climate.vars))){
+      all.data <- all.data %>%
+        dplyr::select(-any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
+
+    }
 
     op.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/",
                       xgb.model.prefix,".",cvar,".RDS")
