@@ -39,7 +39,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
                                "model",climate.vars))
 
   all.grids <- readRDS(grid.file) %>%
-    dplyr::select(all.climate.vars)
+    dplyr::select(any_of(c(all.climate.vars)))
 
   if (scenario == "S3"){
     all.grids.transitions <- readRDS(grid.file.transition) %>%
