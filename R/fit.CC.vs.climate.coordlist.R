@@ -154,7 +154,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     ) # remove constant columns (full of 0 for instance)
 
   cccdf <-  cccdf %>%
-    group_by(year,lat,lon) %>%
+    # group_by(any_of(c(year,lat,lon))) %>%
     mutate(group = sample(
       c("train", "validation", "test"),
       size = n(),
