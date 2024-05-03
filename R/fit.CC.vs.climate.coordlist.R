@@ -141,6 +141,9 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     ccdf.bis <- ccdf
   }
 
+  # switch
+  ccdf.tris <- ccdf.bis ; ccdf.bis <- ccdf ; ccdf <- ccdf.tris
+
   cccdf <- ccdf %>%
     dplyr::select(-any_of(c("time","continent","model.lat.lon","model.lon.lat",
                             "gpp","npp","nep","ra","rh","nbp"))) %>%
@@ -149,7 +152,6 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
         ~!all((.x == mean(.x,na.rm = TRUE)))
       )
     ) # remove constant columns (full of 0 for instance)
-
 
   cccdf <-  cccdf %>%
     group_by(year,lat,lon) %>%
@@ -167,6 +169,8 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     cccdf.bis <- cccdf
   }
 
+  # switch
+  cccdf.tris <- cccdf.bis ; cccdf.bis <- cccdf ; cccdf <- cccdf.tris
 
   for (cvar in vars){
 
