@@ -141,9 +141,6 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     ccdf.bis <- ccdf
   }
 
-  # switch
-  ccdf.tris <- ccdf.bis ; ccdf.bis <- ccdf ; ccdf <- ccdf.tris
-
   cccdf <- ccdf %>%
     dplyr::select(-any_of(c("time","continent","model.lat.lon","model.lon.lat",
                             "gpp","npp","nep","ra","rh","nbp"))) %>%
@@ -170,6 +167,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
   }
 
   # switch
+  ccdf.tris <- ccdf.bis ; ccdf.bis <- ccdf ; ccdf <- ccdf.tris
   cccdf.tris <- cccdf.bis ; cccdf.bis <- cccdf ; cccdf <- cccdf.tris
 
   for (cvar in vars){
@@ -190,7 +188,6 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     if (file.exists(op.file) & !as.logical(overwrite)) next()
 
     if (nrow(all.data) == 0) next()
-
 
     train <- cccdf %>%
       filter(group == "train") %>%
