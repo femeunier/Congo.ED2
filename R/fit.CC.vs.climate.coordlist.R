@@ -221,7 +221,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
 
     data.bis <- as.matrix(train.bis %>%
                         dplyr::select(-id))
-    label.bis <- cccdf.bis %>%
+    label.bis <- ccdf.bis %>%
       filter(id %in% (train.bis[["id"]])) %>%
       pull(!!cvar)
 
