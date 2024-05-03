@@ -61,7 +61,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
   modelled.sink <- CC.Trendy %>%
     ungroup() %>%
     mutate(lat = round(lat,digits = 2),
-           lon = round(lon,digits = 2))
+           lon = round(lon,digits = 2)) %>%
+    mutate(model.lat.lon = paste0(model,".",lat,".",lon))
 
   # CO2
   dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/global_co2_ann_1700_2022.txt",

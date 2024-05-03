@@ -103,7 +103,7 @@ ggplot() +
                 ymin = -Inf, ymax = Inf), color = NA,
             alpha = 0.3, fill = "grey") +
 
-  geom_point(data = all,
+  geom_line(data = all,
              aes(x = year + (month - 1/2)/12,
                  y = pred.m*10,
                  color = source),
@@ -127,7 +127,7 @@ ggplot() +
   scale_color_manual(values = c("#5ab4ac","#d8b365")) +
   labs(x = "",y = "", color = "") +
   scale_y_continuous(limits = c(2.5,3.5)*10) +
-  scale_x_continuous(limits = c(1994,2024.5)) +
+  scale_x_continuous(limits = c(2020,2024.5)) +
   guides(color = FALSE) +
   theme_bw() +
   theme(text = element_text(size = 20))
@@ -337,6 +337,26 @@ ggplot(data = all.sum) +
   geom_hline(yintercept = 0, color = "black", linetype = 2) +
   geom_line(aes(x = year + (month - 1/2)/12,
                 y = anomaly.m.rm),
+            color = "black") +
+  theme_bw()
+
+
+
+
+ggplot(data = all.sum) +
+
+  geom_rect(data = droughts,
+            aes(xmin = x1, xmax = x2,
+                ymin = -Inf, ymax = Inf), color = NA,
+            alpha = 0.3, fill = "grey") +
+
+  geom_line(aes(x = year + (month - 1/2)/12,
+                y = pred.m),
+            size = 0.2) +
+
+  # geom_hline(yintercept = 0, color = "black", linetype = 2) +
+  geom_line(aes(x = year + (month - 1/2)/12,
+                y = pred.m.rm),
             color = "black") +
   theme_bw()
 

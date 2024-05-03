@@ -134,6 +134,13 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     filter(model.lon.lat %in% coord.list[["model.lon.lat"]]) %>%
     mutate(id = 1:n())
 
+  if (!all((all.climate.vars %in% climate.vars))){
+    ccdf.bis <- ccdf %>%
+      dplyr::select(-any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
+  } else {
+    ccdf.bis <- ccdf
+  }
+
   cccdf <- ccdf %>%
     dplyr::select(-any_of(c("time","continent","model.lat.lon","model.lon.lat",
                             "gpp","npp","nep","ra","rh","nbp"))) %>%
@@ -142,8 +149,6 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
         ~!all((.x == mean(.x,na.rm = TRUE)))
       )
     ) # remove constant columns (full of 0 for instance)
-
-
 
 
   cccdf <-  cccdf %>%
@@ -156,9 +161,10 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     ungroup()
 
   if (!all((all.climate.vars %in% climate.vars))){
-    cccdf <- cccdf %>%
+    cccdf.bis <- cccdf %>%
       dplyr::select(-any_of(all.climate.vars[!(all.climate.vars %in% climate.vars)]))
-
+  } else {
+    cccdf.bis <- cccdf
   }
 
 
@@ -186,11 +192,23 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       filter(group == "train") %>%
       dplyr::select(-group)
 
+    train.bis <- cccdf.bis %>%
+      filter(group == "train") %>%
+      dplyr::select(-group)
+
     validation <- cccdf %>%
       filter(group == "validation") %>%
       dplyr::select(-group)
 
+    validation.bis <- cccdf.bis %>%
+      filter(group == "validation") %>%
+      dplyr::select(-group)
+
     test <- cccdf %>%
+      filter(group == "test") %>%
+      dplyr::select(-group)
+
+    test.bis <- cccdf.bis %>%
       filter(group == "test") %>%
       dplyr::select(-group)
 
@@ -201,6 +219,12 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       filter(id %in% (train[["id"]])) %>%
       pull(!!cvar)
 
+    data.bis <- as.matrix(train.bis %>%
+                        dplyr::select(-id))
+    label.bis <- cccdf.bis %>%
+      filter(id %in% (train.bis[["id"]])) %>%
+      pull(!!cvar)
+
     # Validation data
     validation.data <- as.matrix(validation %>%
                                    dplyr::select(-id))
@@ -208,11 +232,23 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       filter(id %in% (validation[["id"]])) %>%
       pull(!!cvar)
 
+    validation.data.bis <- as.matrix(validation.bis %>%
+                                   dplyr::select(-id))
+    validation.label.bis <- ccdf.bis %>%
+      filter(id %in% (validation.bis[["id"]])) %>%
+      pull(!!cvar)
+
     # Test data
     test.data <- as.matrix(test %>%
                              dplyr::select(-id))
     test.label <- ccdf %>%
       filter(id %in% (test[["id"]])) %>%
+      pull(!!cvar)
+
+    test.data.bis <- as.matrix(test.bis %>%
+                                 dplyr::select(-id))
+    test.label.bis <- ccdf.bis %>%
+      filter(id %in% (test.bis[["id"]])) %>%
       pull(!!cvar)
 
     xgb_model <- caret::train(
@@ -235,14 +271,14 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       nthread = 16,
       verbosity = 1)
 
-    xgb_best_model$training.data <- data
-    xgb_best_model$labels <- label
+    xgb_best_model$training.data <- data.bis
+    xgb_best_model$labels <- label.bis
 
-    xgb_best_model$validation.data <- validation.data
-    xgb_best_model$validation.labels <- validation.label
+    xgb_best_model$validation.data <- validation.data.bis
+    xgb_best_model$validation.labels <- validation.label.bis
 
-    xgb_best_model$test.data <- test.data
-    xgb_best_model$test.labels <- test.label
+    xgb_best_model$test.data <- test.data.bis
+    xgb_best_model$test.labels <- test.label.bis
 
     saveRDS(xgb_best_model,
             op.file)
