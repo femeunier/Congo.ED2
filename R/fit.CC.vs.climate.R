@@ -143,8 +143,8 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     print(paste0("- ",cvar))
 
     ccdf <- sink.vs.climate %>%
-      filter(!is.na(!!cvar)) %>%
       ungroup() %>%
+      dplyr::filter(!is.na(get(cvar))) %>%
       mutate(lat = round(lat,digits = 2),
              lon = round(lon,digits = 2)) %>%
       mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
@@ -234,7 +234,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       tuneGrid = xgb_grid,
       method = "xgbTree",
       nthread = 16,
-      verbosity = 1,)
+      verbosity = 1)
 
     # We rerun with the best set of parameters, with test and validation data together
     xgb_best_model <- caret::train(
