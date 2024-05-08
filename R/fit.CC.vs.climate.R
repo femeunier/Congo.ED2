@@ -138,47 +138,46 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
     sink.vs.climate[[cvar]] <- sink.vs.climate[[cvar]]*86400*365
   }
 
-
-
-  ccdf <- sink.vs.climate %>%
-    ungroup() %>%
-    mutate(lat = round(lat,digits = 2),
-           lon = round(lon,digits = 2)) %>%
-    mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
-    filter(model.lat.lon %in% TF[["model.lat.lon"]]) %>%
-    mutate(id = 1:n())
-
-  cccdf <- ccdf %>%
-    dplyr::select(-c(any_of(c("time","continent","model.lat.lon","model.lon.lat",
-                              "gpp","npp","nep","ra","rh","nbp")))) %>%
-    dplyr::select(
-      where(
-        ~!all((.x == mean(.x,na.rm = TRUE)))
-      )
-    ) # remove constant columns (full of 0 for instance)
-
-
-  # selected <- cccdf %>%
-  #   filter(year %in% sample(unique(year),
-  #                           as.numeric(frac.train)*length(unique(year)),
-  #                           replace = FALSE)) %>%
-  #   pull(id) %>%
-  #   sort()
-
-
-  cccdf <-  cccdf %>%
-    group_by(year,lat,lon) %>%
-    mutate(group = sample(
-      c("train", "validation", "test"),
-      size = n(),
-      replace = TRUE,
-      prob = c(as.numeric(frac.train),(1-as.numeric(frac.train))/2,(1-as.numeric(frac.train))/2))) %>%
-    ungroup()
-
-
   for (cvar in vars){
 
     print(paste0("- ",cvar))
+
+    ccdf <- sink.vs.climate %>%
+      filter(!is.na(!!cvar)) %>%
+      ungroup() %>%
+      mutate(lat = round(lat,digits = 2),
+             lon = round(lon,digits = 2)) %>%
+      mutate(model.lat.lon = paste0(model,".",lat,".",lon)) %>%
+      filter(model.lat.lon %in% TF[["model.lat.lon"]]) %>%
+      mutate(id = 1:n())
+
+    cccdf <- ccdf %>%
+      dplyr::select(-c(any_of(c("time","continent","model.lat.lon","model.lon.lat",
+                                "gpp","npp","nep","ra","rh","nbp")))) %>%
+      dplyr::select(
+        where(
+          ~!all((.x == mean(.x,na.rm = TRUE)))
+        )
+      ) # remove constant columns (full of 0 for instance)
+
+
+    # selected <- cccdf %>%
+    #   filter(year %in% sample(unique(year),
+    #                           as.numeric(frac.train)*length(unique(year)),
+    #                           replace = FALSE)) %>%
+    #   pull(id) %>%
+    #   sort()
+
+
+    cccdf <-  cccdf %>%
+      group_by(year,lat,lon) %>%
+      mutate(group = sample(
+        c("train", "validation", "test"),
+        size = n(),
+        replace = TRUE,
+        prob = c(as.numeric(frac.train),(1-as.numeric(frac.train))/2,(1-as.numeric(frac.train))/2))) %>%
+      ungroup()
+
 
     all.data <- cbind(cccdf %>%
                         dplyr::select(-c(id)),
@@ -235,7 +234,7 @@ fit.CC.vs.climate <- function(model = "CABLE-POP",
       tuneGrid = xgb_grid,
       method = "xgbTree",
       nthread = 16,
-      verbosity = 1)
+      verbosity = 1,)
 
     # We rerun with the best set of parameters, with test and validation data together
     xgb_best_model <- caret::train(
