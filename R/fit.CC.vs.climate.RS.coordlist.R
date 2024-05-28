@@ -6,16 +6,6 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
                                            overwrite = TRUE,
                                            climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
-  product <- "TwoLeaf"
-  coord.list <- "/kyukon/data/gent/vo/000/gvo00074/felicien/R/outputs/Congo.coord.ILF.RDS"
-  xgb.model.prefix <- "Basin.Comp.RS.Congo.TwoLeaf"
-  grid.suffix <- "ERA5"
-  frac.train <- "0.6"
-  overwrite <- "TRUE"
-  climate.vars <- c('year', 'month', 'lon', 'lat', 'tmp', 'tmin', 'tmax', 'spfh', 'VPD', 'pre', 'dswrf', 'dlwrf')
-
-
-
   cproduct <- product
   if (!file.exists(coord.list)){
     stop("Coord list does not exist")
