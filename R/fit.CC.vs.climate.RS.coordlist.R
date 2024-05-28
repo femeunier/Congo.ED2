@@ -10,7 +10,10 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
   if (!file.exists(coord.list)){
     stop("Coord list does not exist")
   } else {
-    coord.list <- readRDS(coord.list)
+    coord.list <- readRDS(coord.list) %>%
+      filter(model == "DLEM") %>%
+      mutate(lon.lat = paste0(lon,".",lat)) %>%
+      dplyr::select(-c(model,model.lon.lat))
   }
 
   grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,grid.suffix,".RDS")
@@ -90,8 +93,8 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
 
   ccdf <- sink.vs.climate %>%
     ungroup() %>%
-    mutate(model.lon.lat = paste0(model,".",lon,".",lat)) %>%
-    filter(model.lon.lat %in% coord.list[["model.lon.lat"]]) %>%
+    mutate(lon.lat = paste0(lon,".",lat)) %>%
+    filter(lon.lat %in% coord.list[["lon.lat"]]) %>%
     mutate(id = 1:n())
 
   if (!all((all.climate.vars %in% climate.vars))){
