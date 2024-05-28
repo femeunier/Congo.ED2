@@ -115,7 +115,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
 
   cccdf <- ccdf %>%
     dplyr::select(-any_of(c("time","continent","model.lat.lon","model.lon.lat",
-                            "lon.lat",
+                            "lon.lat","model",
                             "value"))) %>%
     dplyr::select(
       where(
@@ -142,8 +142,6 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
   # switch
   ccdf.tris <- ccdf.bis ; ccdf.bis <- ccdf ; ccdf <- ccdf.tris
   cccdf.tris <- cccdf.bis ; cccdf.bis <- cccdf ; cccdf <- cccdf.tris
-
-
 
   all.data <- cbind(cccdf %>%
                       dplyr::select(-c(id)),
