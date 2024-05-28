@@ -16,7 +16,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
       dplyr::select(-any_of(c("model","model.lon.lat")))
   }
 
-  grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,grid.suffix,".RDS")
+  grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",product,".",grid.suffix,".RDS")
   model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/GPP.products.RDS")
 
   if (!all(file.exists(all.files))){
