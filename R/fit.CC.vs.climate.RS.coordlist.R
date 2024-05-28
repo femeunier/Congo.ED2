@@ -13,7 +13,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
     coord.list <- readRDS(coord.list) %>%
       filter(model == "DLEM") %>%
       mutate(lon.lat = paste0(lon,".",lat)) %>%
-      dplyr::select(-c(model,model.lon.lat))
+      dplyr::select(-any_of(c(model,model.lon.lat)))
   }
 
   grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,grid.suffix,".RDS")
@@ -43,7 +43,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
     ungroup() %>%
     mutate(lat = round(lat,digits = 2),
            lon = round(lon,digits = 2)) %>%
-    mutate(model.lon.lat = paste0(model,".",lon,".",lat))
+    mutate(lon.lat = paste0(model,".",lon,".",lat))
 
   # CO2
   dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/global_co2_ann_1700_2022.txt",

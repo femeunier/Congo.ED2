@@ -1,11 +1,11 @@
 write.script.fit.RS.coordlist <- function(file = "script.R",
-                                       product = "NIR",
-                                       coord.list = "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/Amazon.coord.ILF.RDS",
-                                       xgb.model.prefix = "xgb.model",
-                                       grid.suffix = "",
-                                       frac.train = 0.6,
-                                       overwrite = TRUE,
-                                       climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
+                                          product = "NIR",
+                                          coord.list = "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/Amazon.coord.ILF.RDS",
+                                          xgb.model.prefix = "xgb.model",
+                                          grid.suffix = "",
+                                          frac.train = 0.6,
+                                          overwrite = TRUE,
+                                          climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
   writeLines("rm(list = ls())",con = file)
   write("",file=file,append=TRUE)
@@ -32,9 +32,9 @@ write.script.fit.RS.coordlist <- function(file = "script.R",
 
   write("",file=file,append=TRUE)
 
-  write("fit.CC.vs.climate.RS.coordlist(model,scenario,
-        vars,coord.list,xgb.model.prefix,grid.suffix,
-        frac.train,overwrite,transition.suffix,CC.suffix,climate.vars)",
+  write("fit.CC.vs.climate.RS.coordlist(product,
+        coord.list,xgb.model.prefix,grid.suffix,
+        frac.train,overwrite,climate.vars)",
         file=file,append=TRUE)
 }
 
