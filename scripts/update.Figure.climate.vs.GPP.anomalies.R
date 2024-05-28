@@ -4,8 +4,12 @@ library(dplyr)
 library(tidyverse)
 library(zoo)
 library(ggplot2)
+library(lubridate)
 
 Window = 6
+
+cmonth <- month(today())
+
 climate.sum.anomaly <- readRDS("./outputs/climate.sum.anomaly.select.RDS") %>%
   group_by(variable) %>%
   mutate(anomaly.month = value - mean.month - mean(value,na.rm = TRUE)) %>%
@@ -30,12 +34,12 @@ climate.sum.anomaly <- readRDS("./outputs/climate.sum.anomaly.select.RDS") %>%
 GPPanomalies <- readRDS("./outputs/GPP.anomalies.ERA5.RDS")
 
 combined <- climate.sum.anomaly %>%
-  filter(year <= 2023 | (year == 2024 & month < 5)) %>%
+  filter(year <= 2023 | (year == 2024 & month < (cmonth + 1))) %>%
   left_join(GPPanomalies %>%
               dplyr::select(year,month,source,anomaly.m,anomaly.m.rm),
             by = c("year","month")) %>%
   mutate(timing = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2024 & month %in% c(1:3) ~ "2023",
+                            year == 2024 & month %in% c(1:(cmonth)) ~ "2023",
 
                             # year == 2009 & month %in% c(8:12) ~ "2010",
                             # year == 2010 & month %in% c(1:5) ~ "2010",
@@ -72,6 +76,10 @@ ggplot(data = combined ,
   geom_point(data = combined %>%
                filter(!is.na(timing)),
              aes(color = as.factor(timing))) +
+  # geom_point(data = combined %>%
+  #              filter(!is.na(timing),
+  #                     month == 5 & year == 2024),
+  #            color = "red") +
 
   scale_color_manual(values = c("#1b9e77","#d95f02","#7570b3")) +
   scale_fill_manual(values = c("#1b9e77","#d95f02","#7570b3")) +

@@ -4,17 +4,19 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 library(zoo)
+library(lubridate)
 
 Window = 6
+cmonth <- month(today())
 
 files <- c("RSanomalies.ERA5.RDS",
            "Trendy.data.rspld.ERA5.pred.RDS")
 
-# for (cfile in files){
-#   system2("scp",
-#           c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
-#             "./outputs/"))
-# }
+for (cfile in files){
+  system2("scp",
+          c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
+            "./outputs/"))
+}
 
 RS <- readRDS("./outputs/RSanomalies.ERA5.RDS") %>%
   dplyr::select(year,month,pred.m,anomaly,anomaly.m,mean.pred) %>%
@@ -94,7 +96,43 @@ droughts <- data.frame(x1 = c(1997 + 9/12,
                        x2 = c(1998 + 4/12 ,
                               # 2010 + 10/12,
                               2016 + 3/12,
-                              2024 + 4/12) + 0.5/12)
+                              2024 + cmonth/12) + 0.5/12)
+
+ggplot() +
+
+  geom_rect(data = droughts,
+            aes(xmin = x1, xmax = x2,
+                ymin = -Inf, ymax = Inf), color = NA,
+            alpha = 0.3, fill = "grey") +
+
+  geom_line(data = all,
+            aes(x = year + (month - 1/2)/12,
+                y = pred.m*10,
+                color = source),
+            size = 0.2) +
+
+  # geom_point(data = all %>%
+  #              filter(year == 2023, month == 10),
+  #            aes(x = year + (month - 1/2)/12,
+  #                y = pred.m), color = "red",
+  #            size = 1) +
+
+  geom_line(data = all,
+            aes(x = year + (month - 1/2)/12,
+                y = mean.pred*10,
+                color = source), linetype = 2) +
+
+  geom_line(data = all,
+            aes(x = year + (month - 1/2)/12,
+                y = pred.m.rm*10,
+                color = source)) +
+  scale_color_manual(values = c("#5ab4ac","#d8b365")) +
+  labs(x = "",y = "", color = "") +
+  scale_y_continuous(limits = c(2.5,3.5)*10) +
+  scale_x_continuous(limits = c(1994,2025)) +
+  guides(color = FALSE) +
+  theme_bw() +
+  theme(text = element_text(size = 20))
 
 ggplot() +
 
@@ -127,7 +165,7 @@ ggplot() +
   scale_color_manual(values = c("#5ab4ac","#d8b365")) +
   labs(x = "",y = "", color = "") +
   scale_y_continuous(limits = c(2.5,3.5)*10) +
-  scale_x_continuous(limits = c(2020,2024.5)) +
+  scale_x_continuous(limits = c(2020,2025)) +
   guides(color = FALSE) +
   theme_bw() +
   theme(text = element_text(size = 20))
@@ -213,7 +251,42 @@ ggplot() +
   scale_color_manual(values = c("#5ab4ac","#d8b365")) +
   labs(x = "",y = "", color = "") +
   scale_y_continuous(limits = c(-5,2.5)) +
-  scale_x_continuous(limits = c(1994,2024.5)) +
+  scale_x_continuous(limits = c(1994,2025)) +
+  guides(color = FALSE) +
+  theme(text = element_text(size = 20))
+
+
+ggplot() +
+
+  geom_rect(data = droughts,
+            aes(xmin = x1, xmax = x2,
+                ymin = -Inf, ymax = Inf), color = NA,
+            alpha = 0.3, fill = "grey") +
+
+  geom_point(data = all,
+             aes(x = year + (month - 1/2)/12,
+                 y = anomaly.m,
+                 color = source),
+             size = 0.2) +
+
+
+  # geom_point(data = all %>%
+  #              filter(year == 2023, month == 10),
+  #            aes(x = year + (month - 1/2)/12,
+  #                y = anomaly.m), color = "red",
+  #            size = 1) +
+
+  geom_line(data = all,
+            aes(x = year + (month - 1/2)/12,
+                y = anomaly.m.rm,
+                color = source)) +
+  theme_bw() +
+  geom_hline(linetype = 2, color = "black",
+             yintercept = 0) +
+  scale_color_manual(values = c("#5ab4ac","#d8b365")) +
+  labs(x = "",y = "", color = "") +
+  scale_y_continuous(limits = c(-5,2.5)) +
+  scale_x_continuous(limits = c(2020,2025)) +
   guides(color = FALSE) +
   theme(text = element_text(size = 20))
 

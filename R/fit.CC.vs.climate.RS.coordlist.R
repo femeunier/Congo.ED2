@@ -1,15 +1,12 @@
-fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
-                                        scenario = "S2",
-                                        vars = c("gpp","npp","nep","ra","rh","nbp"),
-                                        coord.list = "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/Amazon.coord.ILF.RDS",
-                                        xgb.model.prefix = "xgb.model",
-                                        grid.suffix = "",
-                                        frac.train = 0.6,
-                                        overwrite = TRUE,
-                                        transition.suffix = "transitions",
-                                        CC.suffix = "CC.pantropical.v11",
-                                        climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
+fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
+                                           coord.list = "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/Amazon.coord.ILF.RDS",
+                                           xgb.model.prefix = "xgb.model",
+                                           grid.suffix = "",
+                                           frac.train = 0.6,
+                                           overwrite = TRUE,
+                                           climate.vars = c("tmp","tmin","tmax","spfh","VPD","pre","dswrf","dlwrf")){
 
+  cproduct <- product
   if (!file.exists(coord.list)){
     stop("Coord list does not exist")
   } else {
@@ -17,14 +14,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
   }
 
   grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,grid.suffix,".RDS")
-  model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/Trendy.",model,".",scenario,".",CC.suffix,".RDS")
-
-  if (scenario == "S3"){
-    grid.file.transition <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",model,".",transition.suffix,".RDS")
-    all.files <- c(model.file,grid.file,grid.file.transition)
-  } else {
-    all.files <- c(model.file,grid.file)
-  }
+  model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/GPP.products.RDS")
 
   if (!all(file.exists(all.files))){
     stop(paste("Not all files exist, check:",
@@ -32,7 +22,8 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
   }
 
   all.models <- readRDS(model.file) %>%
-    dplyr::select(-starts_with("time.unit"))
+    filter(product == cproduct) %>%
+    dplyr::select(-product)
 
   all.climate.vars <- unique(c("lon","lat",
                                "year","month",
@@ -41,13 +32,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
   all.grids <- readRDS(grid.file) %>%
     dplyr::select(any_of(c(all.climate.vars)))
 
-  if (scenario == "S3"){
-    all.grids.transitions <- readRDS(grid.file.transition) %>%
-      rename(year = time)
-  }
-
   CC.Trendy <- all.models
-  existing.vars <- intersect(vars,colnames(CC.Trendy))
 
   # Merge
 
@@ -70,40 +55,15 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     mutate(CO2 = na.spline(CO2,method = "natural"))
 
 
-  if (scenario == "S2"){
-
-    sink.vs.climate <- modelled.sink %>%
-      left_join(all.grids %>%
-                  dplyr::select(-starts_with("model")) %>%
-                  mutate(lat = round(lat,digits = 2),
-                         lon = round(lon,digits = 2)),
-                by = c("year","lat","lon","month")) %>%
-      left_join(dataC02.all,
-                by = c("year")) %>%
-      ungroup()
-
-
-
-  } else if (scenario == "S3"){
-
-    sink.vs.climate <- modelled.sink %>%
-      left_join(all.grids %>%
-                  dplyr::select(-starts_with("model")) %>%
-                  mutate(lat = round(lat,digits = 2),
-                         lon = round(lon,digits = 2)),
-                by = c("year","lat","lon","month")) %>%
-
-      left_join(all.grids.transitions %>%
-                  dplyr::select(-starts_with("model")) %>%
-                  mutate(lat = round(lat,digits = 2),
-                         lon = round(lon,digits = 2)),
-                by = c("year","lat","lon")) %>%
-
-      left_join(dataC02.all,
-                by = c("year")) %>%
-      ungroup()
-
-  }
+  sink.vs.climate <- modelled.sink %>%
+    left_join(all.grids %>%
+                dplyr::select(-starts_with("product")) %>%
+                mutate(lat = round(lat,digits = 2),
+                       lon = round(lon,digits = 2)),
+              by = c("year","lat","lon","month")) %>%
+    left_join(dataC02.all,
+              by = c("year")) %>%
+    ungroup()
 
   xgb_trcontrol <- caret::trainControl(
     method = "cv",
@@ -125,7 +85,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     ))
 
   for (cvar in existing.vars){
-    sink.vs.climate[[cvar]] <- sink.vs.climate[[cvar]]*86400*365
+    sink.vs.climate[[cvar]] <- sink.vs.climate[[cvar]]*365/1000
   }
 
   ccdf <- sink.vs.climate %>%
@@ -221,7 +181,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       pull(!!cvar)
 
     data.bis <- as.matrix(train.bis %>%
-                        dplyr::select(-id))
+                            dplyr::select(-id))
     label.bis <- ccdf.bis %>%
       filter(id %in% (train.bis[["id"]])) %>%
       pull(!!cvar)
@@ -234,7 +194,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
       pull(!!cvar)
 
     validation.data.bis <- as.matrix(validation.bis %>%
-                                   dplyr::select(-id))
+                                       dplyr::select(-id))
     validation.label.bis <- ccdf.bis %>%
       filter(id %in% (validation.bis[["id"]])) %>%
       pull(!!cvar)

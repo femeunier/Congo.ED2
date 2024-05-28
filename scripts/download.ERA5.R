@@ -2,11 +2,12 @@ library(reticulate)
 library(future)
 library(purrr)
 library(furrr)
+library(lubridate)
 
 # setwd("/home/femeunier/Documents/projects/YGB/outputs/") # change this to your own working directory
 setwd("/data/gent/vo/000/gvo00074/ED_common_data/met/Tropics/")
 
-plan(multiprocess)
+plan(multicore)
 # Manaus
 # Latitude: -3.117034
 # Longitude: -60.025780
@@ -18,7 +19,8 @@ plan(multiprocess)
 files.already.dow <- tools::file_path_sans_ext(list.files(
   getwd()))
 yrs <- as.numeric(sub(".*\\_","",files.already.dow))
-years <- 2023:2023
+years <- 2024
+cmonths <- as.list(as.character(1:month(today())))
 # years <- years[!(years %in% yrs)]
 
 c(years) %>%
@@ -49,10 +51,7 @@ c(years) %>%
         'time' = list('00:00','03:00','06:00',
                       '09:00','12:00','15:00',
                       '18:00','21:00'),
-        'month' = list('01','02','03',
-                       '04','05','06',
-                       '07','08','09',
-                       '10','11','12'),
+        'month' = cmonths,
         'year' = as.character(year),
         'area' = "25/-100/-25/180", #"5/-53/5.5/-52.5",
         'grid' = "0.5/0.5",

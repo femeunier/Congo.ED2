@@ -38,11 +38,14 @@ climate.sum <- climate.select %>%
                names_to = "variable",
                values_to = "value")
 
+
+cmonth <- month(today())
+
 climate.sum <- bind_rows(climate.sum,
                          climate.sum %>%
                            filter(year == 2024,
                                   month == 1) %>%
-                           mutate(month = 5,
+                           mutate(month = cmonth + 1,
                                   value = NA))
 
 climate.sum.anomaly <- climate.sum %>%
@@ -75,7 +78,7 @@ climate.sum.anomaly.select <- climate.sum.anomaly %>%
 
 climate.sum.anomaly.select.group <- climate.sum.anomaly.select %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2024 & month %in% c(1:4) ~ "2023",
+                            year == 2024 & month %in% c(1:cmonth) ~ "2023",
 
                             year == 2016 & month %in% c(1:4) ~ "2015",
                             year == 2015 & month %in% c(8:12) ~ "2015",
@@ -89,7 +92,7 @@ climate.sum.anomaly.select.group <- climate.sum.anomaly.select %>%
   mutate(value = case_when((year == 1998 & month == 5) |
                              (year == 2016 & month == 4) |
                              (year == 2010 & month == 5) |
-                             (year == 2024 & month == 5) ~ NA,
+                             (year == 2024 & month == (cmonth + 1)) ~ NA,
                            TRUE ~ value)) %>%
   arrange(year,month,variable)
 
@@ -133,17 +136,17 @@ climate.sum.anomaly.selected.group <- climate.sum.anomaly.selected %>%
          anomaly = case_when(!is.na(groups) ~ anomaly,
                              TRUE ~ NA_real_)) %>%
   mutate(value = case_when((year == 1998 & month == 5) |
-                             (year == 2024 & month == 5) |
+                             (year == 2024 & month == (cmonth + 1)) |
                              (year == 2010 & month == 5) |
                              (year == 2016 & month == 4) ~ NA,
                            TRUE ~ value),
          anomaly.m = case_when((year == 1998 & month == 5) |
-                                 (year == 2024 & month == 5) |
+                                 (year == 2024 & month == (cmonth + 1)) |
                                  (year == 2010 & month == 5) |
                                  (year == 2016 & month == 4) ~ NA,
                                TRUE ~ anomaly.m),
          anomaly = case_when((year == 1998 & month == 5) |
-                               (year == 2024 & month == 5) |
+                               (year == 2024 & month == (cmonth + 1)) |
                                (year == 2010 & month == 5) |
                                (year == 2016 & month == 4) ~ NA,
                              TRUE ~ anomaly)) %>%

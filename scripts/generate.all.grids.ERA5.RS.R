@@ -12,47 +12,6 @@ library(stringr)
 library(randomForest)
 library(ggpointdensity)
 
-
-# df.all <- bind_rows(list(
-#
-#   # readRDS("./data/GPP/monthly/all.df.GPP2.RDS") %>%
-#   #                          mutate(product = "Madani") %>%
-#   #                          rename(value = daily.GPP) %>%
-#   #                          ungroup(),
-#
-#   # readRDS("./data/GPP/monthly/all.df.GPP.RDS") %>%
-#   #   mutate(product = "Zhang") %>%
-#   #   rename(value = daily.GPP) %>%
-#   #   ungroup(),
-#
-#   readRDS("./data/GPP/monthly/NIR.GPP.RDS") %>%
-#     mutate(product = "NIR") %>%
-#     ungroup(),
-#
-#   # readRDS("./data/GPP/monthly/df.all.GPP3.RDS") %>%
-#   #   mutate(product = "Fluxcom") %>%
-#   #   dplyr::select(-value) %>%
-#   #   rename(value = daily.GPP) %>%
-#   #   ungroup(),
-#   #
-#   # readRDS("./data/GPP/monthly/all.df.GPP.MODIS.RDS") %>%
-#   #   mutate(product = "MODIS") %>%
-#   #   rename(value = daily.GPP) %>%
-#   #   ungroup(),
-#
-#   readRDS("./data/GPP/monthly/SIF.GPP2.RDS") %>%
-#     mutate(product = "SIF2") %>%
-#     ungroup(),
-#
-#   readRDS("./data/GPP/monthly/SIF.GPP.RDS") %>%
-#     mutate(product = "SIF") %>%
-#     ungroup(),
-#
-#   readRDS("./data/GPP/monthly/VOD.GPP.RDS") %>%
-#     mutate(product = "VOD") %>%
-#     ungroup())) %>%
-#   dplyr::select(product,lat,lon,year,month,value)
-
 df.all <- readRDS("./outputs/All.GPP.products.RDS")
 
 
