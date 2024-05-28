@@ -44,7 +44,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
     ungroup() %>%
     mutate(lat = round(lat,digits = 2),
            lon = round(lon,digits = 2)) %>%
-    mutate(lon.lat = paste0(model,".",lon,".",lat))
+    mutate(lon.lat = paste0(lon,".",lat))
 
   # CO2
   dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/global_co2_ann_1700_2022.txt",
