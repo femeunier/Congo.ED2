@@ -19,6 +19,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
   grid.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/grid.",product,".",grid.suffix,".RDS")
   model.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/data/GPP.products.RDS")
 
+  all.files <- c(grid.file,model.file)
   if (!all(file.exists(all.files))){
     stop(paste("Not all files exist, check:",
                all.files[which(!file.exists(all.files))]))
