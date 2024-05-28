@@ -91,6 +91,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
   sink.vs.climate[["value"]] <- sink.vs.climate[["value"]]*365/1000
 
   ccdf <- sink.vs.climate %>%
+    na.omit() %>%
     ungroup() %>%
     mutate(lon.lat = paste0(lon,".",lat)) %>%
     filter(lon.lat %in% coord.list[["lon.lat"]]) %>%
