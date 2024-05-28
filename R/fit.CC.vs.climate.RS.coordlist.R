@@ -88,9 +88,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
       subsample = 1 # subsample ratio of the training instances
     ))
 
-  for (cvar in existing.vars){
-    sink.vs.climate[[cvar]] <- sink.vs.climate[[cvar]]*365/1000
-  }
+  sink.vs.climate[["value"]] <- sink.vs.climate[["value"]]*365/1000
 
   ccdf <- sink.vs.climate %>%
     ungroup() %>%
@@ -107,7 +105,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
 
   cccdf <- ccdf %>%
     dplyr::select(-any_of(c("time","continent","model.lat.lon","model.lon.lat",
-                            "gpp","npp","nep","ra","rh","nbp"))) %>%
+                            "value"))) %>%
     dplyr::select(
       where(
         ~!all((.x == mean(.x,na.rm = TRUE)))
@@ -115,7 +113,7 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
     ) # remove constant columns (full of 0 for instance)
 
   cccdf <-  cccdf %>%
-    group_by(any_of(c(year,lat,lon))) %>%
+    group_by(year,lat,lon) %>%
     mutate(group = sample(
       c("train", "validation", "test"),
       size = n(),
@@ -134,121 +132,119 @@ fit.CC.vs.climate.RS.coordlist <- function(product = "NIR",
   ccdf.tris <- ccdf.bis ; ccdf.bis <- ccdf ; ccdf <- ccdf.tris
   cccdf.tris <- cccdf.bis ; cccdf.bis <- cccdf ; cccdf <- cccdf.tris
 
-  for (cvar in vars){
 
-    print(paste0("- ",cvar))
 
-    all.data <- cbind(cccdf %>%
-                        dplyr::select(-c(id)),
-                      ccdf %>%
-                        dplyr::select(!!cvar)) %>%
-      na.omit() %>%
-      # group_by(lat,lon) %>%
-      # filter(!all(get(cvar) == 0)) %>%
-      ungroup()
+  all.data <- cbind(cccdf %>%
+                      dplyr::select(-c(id)),
+                    ccdf %>%
+                      dplyr::select("value")) %>%
+    na.omit() %>%
+    # group_by(lat,lon) %>%
+    # filter(!all(get(cvar) == 0)) %>%
+    ungroup()
 
-    op.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/",
-                      xgb.model.prefix,".",cvar,".RDS")
-    if (file.exists(op.file) & !as.logical(overwrite)) next()
+  op.file <- paste0("/data/gent/vo/000/gvo00074/felicien/R/outputs/",
+                    xgb.model.prefix,".RDS")
+  if (file.exists(op.file) & !as.logical(overwrite)) next()
 
-    if (nrow(all.data) == 0) next()
+  if (nrow(all.data) == 0) next()
 
-    train <- cccdf %>%
-      filter(group == "train") %>%
-      dplyr::select(-group)
+  train <- cccdf %>%
+    filter(group == "train") %>%
+    dplyr::select(-group)
 
-    train.bis <- cccdf.bis %>%
-      filter(group == "train") %>%
-      dplyr::select(-group)
+  train.bis <- cccdf.bis %>%
+    filter(group == "train") %>%
+    dplyr::select(-group)
 
-    validation <- cccdf %>%
-      filter(group == "validation") %>%
-      dplyr::select(-group)
+  validation <- cccdf %>%
+    filter(group == "validation") %>%
+    dplyr::select(-group)
 
-    validation.bis <- cccdf.bis %>%
-      filter(group == "validation") %>%
-      dplyr::select(-group)
+  validation.bis <- cccdf.bis %>%
+    filter(group == "validation") %>%
+    dplyr::select(-group)
 
-    test <- cccdf %>%
-      filter(group == "test") %>%
-      dplyr::select(-group)
+  test <- cccdf %>%
+    filter(group == "test") %>%
+    dplyr::select(-group)
 
-    test.bis <- cccdf.bis %>%
-      filter(group == "test") %>%
-      dplyr::select(-group)
+  test.bis <- cccdf.bis %>%
+    filter(group == "test") %>%
+    dplyr::select(-group)
 
-    # Training data
-    data <- as.matrix(train %>%
-                        dplyr::select(-id))
-    label <- ccdf %>%
-      filter(id %in% (train[["id"]])) %>%
-      pull(!!cvar)
+  # Training data
+  data <- as.matrix(train %>%
+                      dplyr::select(-id))
+  label <- ccdf %>%
+    filter(id %in% (train[["id"]])) %>%
+    pull(value)
 
-    data.bis <- as.matrix(train.bis %>%
-                            dplyr::select(-id))
-    label.bis <- ccdf.bis %>%
-      filter(id %in% (train.bis[["id"]])) %>%
-      pull(!!cvar)
+  data.bis <- as.matrix(train.bis %>%
+                          dplyr::select(-id))
+  label.bis <- ccdf.bis %>%
+    filter(id %in% (train.bis[["id"]])) %>%
+    pull(value)
 
-    # Validation data
-    validation.data <- as.matrix(validation %>%
-                                   dplyr::select(-id))
-    validation.label <- ccdf %>%
-      filter(id %in% (validation[["id"]])) %>%
-      pull(!!cvar)
-
-    validation.data.bis <- as.matrix(validation.bis %>%
-                                       dplyr::select(-id))
-    validation.label.bis <- ccdf.bis %>%
-      filter(id %in% (validation.bis[["id"]])) %>%
-      pull(!!cvar)
-
-    # Test data
-    test.data <- as.matrix(test %>%
-                             dplyr::select(-id))
-    test.label <- ccdf %>%
-      filter(id %in% (test[["id"]])) %>%
-      pull(!!cvar)
-
-    test.data.bis <- as.matrix(test.bis %>%
+  # Validation data
+  validation.data <- as.matrix(validation %>%
                                  dplyr::select(-id))
-    test.label.bis <- ccdf.bis %>%
-      filter(id %in% (test.bis[["id"]])) %>%
-      pull(!!cvar)
+  validation.label <- ccdf %>%
+    filter(id %in% (validation[["id"]])) %>%
+    pull(value)
 
-    xgb_model <- caret::train(
-      data,label,
-      trControl = xgb_trcontrol,
-      tuneGrid = xgb_grid,
-      method = "xgbTree",
-      nthread = 16,
-      verbosity = 1)
+  validation.data.bis <- as.matrix(validation.bis %>%
+                                     dplyr::select(-id))
+  validation.label.bis <- ccdf.bis %>%
+    filter(id %in% (validation.bis[["id"]])) %>%
+    pull(value)
 
-    # We rerun with the best set of parameters, with test and validation data together
-    xgb_best_model <- caret::train(
-      x = rbind(data,
-                validation.data),
-      y = c(label,
-            validation.label),
-      trControl = xgb_trcontrol,
-      tuneGrid = xgb_model$bestTune,
-      method = "xgbTree",
-      nthread = 16,
-      verbosity = 1)
+  # Test data
+  test.data <- as.matrix(test %>%
+                           dplyr::select(-id))
+  test.label <- ccdf %>%
+    filter(id %in% (test[["id"]])) %>%
+    pull(value)
 
-    xgb_best_model$training.data <- data.bis
-    xgb_best_model$labels <- label.bis
+  test.data.bis <- as.matrix(test.bis %>%
+                               dplyr::select(-id))
+  test.label.bis <- ccdf.bis %>%
+    filter(id %in% (test.bis[["id"]])) %>%
+    pull(value)
 
-    xgb_best_model$validation.data <- validation.data.bis
-    xgb_best_model$validation.labels <- validation.label.bis
+  xgb_model <- caret::train(
+    data,label,
+    trControl = xgb_trcontrol,
+    tuneGrid = xgb_grid,
+    method = "xgbTree",
+    nthread = 16,
+    verbosity = 1)
 
-    xgb_best_model$test.data <- test.data.bis
-    xgb_best_model$test.labels <- test.label.bis
+  # We rerun with the best set of parameters, with test and validation data together
+  xgb_best_model <- caret::train(
+    x = rbind(data,
+              validation.data),
+    y = c(label,
+          validation.label),
+    trControl = xgb_trcontrol,
+    tuneGrid = xgb_model$bestTune,
+    method = "xgbTree",
+    nthread = 16,
+    verbosity = 1)
 
-    saveRDS(xgb_best_model,
-            op.file)
+  xgb_best_model$training.data <- data.bis
+  xgb_best_model$labels <- label.bis
 
-  }
+  xgb_best_model$validation.data <- validation.data.bis
+  xgb_best_model$validation.labels <- validation.label.bis
+
+  xgb_best_model$test.data <- test.data.bis
+  xgb_best_model$test.labels <- test.label.bis
+
+  saveRDS(xgb_best_model,
+          op.file)
+
+
 
   return(TRUE)
 }
