@@ -129,4 +129,7 @@ ggplot() +
 saveRDS(df.all.pred.MEM.anomaly,
         "./outputs/RSanomalies.ERA5.RDS")
 
+saveRDS(df.all.pred.sum,
+        "./outputs/RSanomalies.ERA5.product.RDS")
+
 # scp /home/femeunier/Documents/projects/Congo.ED2/scripts/plot.predictions.SIF.ERA5.R hpc:/data/gent/vo/000/gvo00074/felicien/R/

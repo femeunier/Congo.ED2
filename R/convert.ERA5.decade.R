@@ -21,9 +21,17 @@ convert.ERA5.decade <- function(decade,
     nc <- nc_open(ncfile)
     lons <- ncvar_get(nc,"longitude")
     lats <- ncvar_get(nc,"latitude")
-    times <- as.Date(ncvar_get(nc,"time")/24,
+    
+    if (cyear < 2024){
+        times <- as.Date(ncvar_get(nc,"time")/24,
                      origin = "1900-01-01")
-    months <- month(times)
+        months <- month(times)
+    } else {
+        times <- as.Date(ncvar_get(nc,"valid_time")/86400,
+                     origin = "1970-01-01")
+    }
+    
+
 
     all.df <- data.frame()
 

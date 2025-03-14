@@ -124,9 +124,8 @@ df.selected <- df.all.wide %>%
          ssp585) %>%
   filter(model != "IITM-ESM")
 
-sites <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
-  filter(model == "ORCHIDEE") %>%
-  filter(is.undisturbed.factor == 1)
+sites <- bind_rows(readRDS("./outputs/Amazon.coord.ERA5.RDS"),
+                   readRDS("./outputs/Congo.coord.ERA5.RDS"))
 
 for (iscenario in seq(1,length(scenarios))){
 
@@ -164,7 +163,7 @@ for (iscenario in seq(1,length(scenarios))){
     cmodel <- models[imodel]
     print(cmodel)
 
-    OP.file <- paste0("./outputs/","df.monthly.tas.",scenarios[iscenario],".",models[imodel],".RDS")
+    OP.file <- paste0("./outputs/","df.monthly.tas.basin.",scenarios[iscenario],".",models[imodel],".RDS")
 
     if (!overwrite & file.exists(OP.file)){
       next()

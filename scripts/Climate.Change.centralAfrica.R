@@ -53,7 +53,7 @@ reference <- CCMA.filt.wide %>%
   mutate(MAP = sum(Pmm)) %>%
 
   filter(month == 1) %>%
-  select(model,lon,lat,MAP,MCWD)
+  dplyr::select(model,lon,lat,MAP,MCWD)
 
 ggplot(data = reference) +
   geom_density(aes(x = MCWD, fill = model), alpha = 0.5) +

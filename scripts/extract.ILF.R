@@ -2,6 +2,12 @@ rm(list = ls())
 
 library(sf)
 library(ggthemes)
+library(dplyr)
+library(ggplot2)
+library(TrENDY.analyses)
+library(raster)
+library(rgeos)
+
 # IFL <- read_sf(dsn = "/home/femeunier/Documents/projects/Congo.ED2/data/IFL/",
 #                       layer = "ifl_2020")
 # IFL$type = 1
@@ -29,8 +35,8 @@ library(ggthemes)
 
 
 ILF.df  <- readRDS("./outputs/ILF2020.df")
-ILF.df  <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
-  filter(model == "ORCHIDEE")
+# ILF.df  <- readRDS("./outputs/Amazon.coord.ILF.RDS") %>%
+#   dplyr::filter(model == "ORCHIDEE")
 
 
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
@@ -68,7 +74,7 @@ ggplot() +
 
 ################################################################################
 
-climate <- readRDS("./outputs/biome.JRA.1901.2023.AI.RDS")
+climate <- readRDS("/home/femeunier/Documents/projects/Global.AI/outputs/biome.ERA5.1940.2023_global.RDS")
 models <- sort(unique(climate$model))
 
 all.coord <- all.coord2 <-
@@ -79,7 +85,7 @@ for (cmodel in models){
   print(cmodel)
 
   cclimate <- climate %>%
-    filter(model == cmodel)
+    dplyr::filter(model == cmodel)
 
   grid <- rasterFromXYZ((cclimate %>%
                    ungroup() %>%
@@ -100,12 +106,12 @@ for (cmodel in models){
                                              is.undisturbed >= 0.5 ~1))
 
   test <- cclimate %>%
-    filter(lon <= -30, lon >= -90,
+    dplyr::filter(lon <= -30, lon >= -90,
            lat <= 10, lat >= -25)
 
   test2 <-cclimate %>%
-    filter(model == cmodel) %>%
-    filter(lon >= 4, lon <= 40,
+    dplyr::filter(model == cmodel) %>%
+    dplyr::filter(lon >= 4, lon <= 40,
            lat <= 12, lat >= -15)
 
   sp <- SpatialPoints(test[,c("lon","lat")])
@@ -122,7 +128,7 @@ for (cmodel in models){
                 mutate( lon = round(lon,digits = 2),
                         lat = round(lat,digits = 2)),
               by = c("lat","lon")) %>%
-      filter(is.undisturbed.factor == 1) %>%
+      dplyr::filter(is.undisturbed.factor == 1) %>%
       mutate(model.lon.lat =
                paste0(cmodel,".",lon,".",lat)))
 
@@ -134,7 +140,7 @@ for (cmodel in models){
                                         mutate( lon = round(lon,digits = 2),
                                                 lat = round(lat,digits = 2)),
                                       by = c("lat","lon")) %>%
-                            filter(is.undisturbed.factor == 1) %>%
+                            dplyr::filter(is.undisturbed.factor == 1) %>%
                             mutate(model.lon.lat =
                                      paste0(cmodel,".",lon,".",lat)))
 }
@@ -174,16 +180,16 @@ ggplot() +
         legend.position = "top")
 
 saveRDS(all.coord,
-        "./outputs/Amazon.coord.ILF.RDS")
+        "./outputs/Amazon.coord.ILF.v12.RDS")
 saveRDS(all.coord2,
-        "./outputs/Congo.coord.ILF.RDS")
+        "./outputs/Congo.coord.ILF.v12.RDS")
 
 
 system2("scp",
-        c("./outputs/Amazon.coord.ILF.RDS",
+        c("./outputs/Amazon.coord.ILF.v12.RDS",
           "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/"))
 
 system2("scp",
-        c("./outputs/Congo.coord.ILF.RDS",
+        c("./outputs/Congo.coord.ILF.v12.RDS",
           "hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/"))
 

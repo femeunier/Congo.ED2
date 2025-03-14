@@ -18,7 +18,7 @@ biomes <- readRDS("./outputs/biome.CRUJRA.1901.2022.AI.RDS") %>%
 raster <- rasterFromXYZ(biomes %>%
                            dplyr::select(c(lon,lat,MAP)))
 
-years <- 2000:2022
+years <- 2000:2023
 months <- 1:12
 
 SF <- (0.01)        # Scaling factor
@@ -43,7 +43,6 @@ for (iyear in seq(1,length(years))){
     gz.name <- paste0(file.name,".gz")
     tmp.f <- file.path(dir,gz.name)
     f <- paste0('http://data.globalecology.unh.edu/data/GOSIF-GPP_v2/Monthly/Mean/',gz.name)
-
     if (!file.exists(tmp.f)) {
 
       test <- tryCatch(download.file(f, tmp.f, mode = 'wb'),
@@ -134,7 +133,7 @@ ggplot() +
 #          lon == -72.25)
 
 # -11.75 -72.25 2018    10 NaN
-# saveRDS(all.df,
-#         "./data/GPP/monthly/SIF.GPP.RDS")
+saveRDS(all.df,
+        "./data/GPP/monthly/SIF.GPP.2023.RDS")
 
 

@@ -37,7 +37,7 @@ A.MEM.ts <- bind_rows(A.MEM %>%
   summarise(pred.m = mean(pred,na.rm = TRUE),
             .groups = "keep"),
   data.frame(year = 2024,
-             month = 3,
+             month = 6,
              pred.m = NA))
 
 ggplot(data = A.MEM.ts) +
@@ -51,7 +51,7 @@ ggplot(data = A.MEM.ts) +
 
 A.MEM.ts.group <- A.MEM.ts %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2024 & month %in% c(1:3) ~ "2023",
+                            year == 2024 & month %in% c(1:6) ~ "2023",
 
                             # year == 2009 & month %in% c(8:12) ~ "2010",
                             # year == 2010 & month %in% c(1:5) ~ "2010",
@@ -66,7 +66,7 @@ A.MEM.ts.group <- A.MEM.ts %>%
   mutate(pred.m = case_when(!is.na(groups) ~ pred.m,
                             TRUE ~ NA_real_)) %>%
   mutate(pred.m = case_when((year == 1998 & month == 5) |
-                              (year == 2024 & month == 3) |
+                              (year == 2024 & month == 6) |
                               (year == 2016 & month == 4) ~ NA,
                             TRUE ~ pred.m)) %>%
   arrange(year,month)
@@ -89,7 +89,7 @@ A.MEM.ts.dt <- A.MEM.ts %>%
 
 A.MEM.ts.dt.groups <- A.MEM.ts.dt %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2024 & month %in% c(1:3) ~ "2023",
+                            year == 2024 & month %in% c(1:6) ~ "2023",
 
                             # year == 2009 & month %in% c(8:12) ~ "2010",
                             # year == 2010 & month %in% c(1:5) ~ "2010",
@@ -104,7 +104,7 @@ A.MEM.ts.dt.groups <- A.MEM.ts.dt %>%
   mutate(anomaly.m = case_when(!is.na(groups) ~ anomaly.m,
                                TRUE ~ NA_real_)) %>%
   mutate(anomaly.m = case_when((year == 1998 & month == 5) |
-                                 (year == 2024 & month == 3) |
+                                 (year == 2024 & month == 6) |
                                  (year == 2016 & month == 4) ~ NA,
                                TRUE ~ anomaly.m)) %>%
   arrange(year,month)
@@ -113,22 +113,21 @@ A.MEM.ts.dt.groups <- A.MEM.ts.dt %>%
 ################################################################################
 # Now RS
 
-B <- readRDS("./outputs/all.predictions.SIF.ILF.ERA5.RDS") %>%
-  filter(year >= 1994) %>%
-  filter(product %in% c("SIF","SIF2","VOD","NIR"))
+# B <- readRDS("./outputs/all.predictions.SIF.ILF.ERA5.RDS") %>%
+#   filter(year >= 1994) %>%
+#   filter(product %in% c("SIF","SIF2","VOD","NIR"))
+#
+# B.MEM <- B %>%
+#   group_by(year, month, lat, lon) %>%
+#   summarise(pred = mean(pred, na.rm = TRUE),
+#             .groups = "keep")
 
-B.MEM <- B %>%
-  group_by(year, month, lat, lon) %>%
-  summarise(pred = mean(pred, na.rm = TRUE),
-            .groups = "keep")
 
-
-B.MEM.ts <- bind_rows(B.MEM %>%
-  group_by(year,month) %>%
-  summarise(pred.m = mean(pred,na.rm = TRUE),
-            .groups = "keep"),
+B.MEM.ts <- bind_rows(readRDS("./outputs/RSanomalies.ERA5.RDS") %>%
+                        dplyr::select(year,month,pred.m),
   data.frame(year = 2024,
-             month = 3,pred.m = NA))
+             month = 6,
+             pred.m = NA))
 
 ggplot(data = B.MEM.ts) +
   geom_rect(aes(xmin = 2023+ 1/12,
@@ -141,7 +140,7 @@ ggplot(data = B.MEM.ts) +
 
 B.MEM.ts.group <- B.MEM.ts %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2024 & month %in% c(1:3) ~ "2023",
+                            year == 2024 & month %in% c(1:6) ~ "2023",
 
                             # year == 2009 & month %in% c(8:12) ~ "2010",
                             # year == 2010 & month %in% c(1:5) ~ "2010",
@@ -156,7 +155,7 @@ B.MEM.ts.group <- B.MEM.ts %>%
   mutate(pred.m = case_when(!is.na(groups) ~ pred.m,
                             TRUE ~ NA_real_)) %>%
   mutate(pred.m = case_when((year == 1998 & month == 5) |
-                              (year == 2023 & month == 3) |
+                              (year == 2023 & month == 6) |
                               (year == 2016 & month == 4) ~ NA,
                             TRUE ~ pred.m)) %>%
   arrange(year,month)
@@ -186,7 +185,7 @@ B.MEM.ts.dt <- B.MEM.ts %>%
 
 B.MEM.ts.dt.groups <- B.MEM.ts.dt %>%
   mutate(groups = case_when(year == 2023 & month %in% c(7:12) ~ "2023",
-                            year == 2024 & month %in% c(1:3) ~ "2023",
+                            year == 2024 & month %in% c(1:6) ~ "2023",
 
                             # year == 2009 & month %in% c(8:12) ~ "2010",
                             # year == 2010 & month %in% c(1:5) ~ "2010",
@@ -201,7 +200,7 @@ B.MEM.ts.dt.groups <- B.MEM.ts.dt %>%
   mutate(anomaly.m = case_when(!is.na(groups) ~ anomaly.m,
                                TRUE ~ NA_real_)) %>%
   mutate(anomaly.m = case_when((year == 1998 & month == 5) |
-                                 (year == 2024 & month == 3) |
+                                 (year == 2024 & month == 6) |
                                  (year == 2016 & month == 4) ~ NA,
                                TRUE ~ anomaly.m)) %>%
   arrange(year,month)
@@ -231,17 +230,17 @@ ggplot() +
   geom_line(data = all.MEM.ts %>%
               filter(year %in% 1994:2023),
             aes(x = month,
-                y = pred.m,
+                y = 10*pred.m,
                 group = year),
             color = "grey", size = 0.15) +
 
   geom_line(data = SC.av,
             aes(x = month,
-                y = pred.m), color = "black") +
+                y = 10*pred.m), color = "black") +
   geom_line(data = all.MEM.ts.group %>%
               filter(!is.na(groups)),
             aes(x = month,
-                y = pred.m,
+                y = 10*pred.m,
                 color = as.factor(groups)),
             show.legend = FALSE) +
 

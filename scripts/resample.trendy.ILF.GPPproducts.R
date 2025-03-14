@@ -82,7 +82,7 @@ for (cmodel in models){
 }
 
 saveRDS(Trendy.data.rspld,
-        "./outputs/Trendy.data.rspld.pred.RDS")
+        "./outputs/Trendy.data.rspld.ERA5.pred.RDS")
 
 
 # ################################################################################

@@ -8,15 +8,17 @@ library(lubridate)
 
 Window = 6
 cmonth <- month(today())
+cmonth <- 5
 
 files <- c("RSanomalies.ERA5.RDS",
-           "Trendy.data.rspld.ERA5.pred.RDS")
+           "Trendy.data.rspld.ERA5.pred.RDS",
+           "all.predictions.SIF.ILF.ERA5.RDS")
 
-for (cfile in files){
-  system2("scp",
-          c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
-            "./outputs/"))
-}
+# for (cfile in files){
+#   system2("scp",
+#           c(paste0("hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/",cfile),
+#             "./outputs/"))
+# }
 
 RS <- readRDS("./outputs/RSanomalies.ERA5.RDS") %>%
   dplyr::select(year,month,pred.m,anomaly,anomaly.m,mean.pred) %>%
@@ -105,7 +107,7 @@ ggplot() +
                 ymin = -Inf, ymax = Inf), color = NA,
             alpha = 0.3, fill = "grey") +
 
-  geom_line(data = all,
+  geom_point(data = all,
             aes(x = year + (month - 1/2)/12,
                 y = pred.m*10,
                 color = source),
@@ -306,7 +308,7 @@ all %>%
 all %>%
   group_by(source) %>%
   filter((year == 2023 & month %in% c(7:12)) |
-           (year == 2024)) %>%
+           (year == 2024 & month %in% c(1:4))) %>%
   summarise(gpp = 10*mean(pred.m),
             anomaly = 10*mean(anomaly),
             anomaly.m = mean(anomaly.m))
@@ -321,7 +323,7 @@ all %>%
 all %>%
   filter(month == 10) %>%
   group_by(source) %>%
-  filter(source == "RS") %>%
+  filter(source == "Trendy") %>%
   arrange(pred.m)
 
 all %>%
@@ -334,7 +336,7 @@ all %>%
 
 all %>%
   filter(source == "Trendy",
-         anomaly.m <= -3.8)
+         anomaly.m <= -3.3)
 
 all %>%
   filter(source == "RS", month == 10) %>%

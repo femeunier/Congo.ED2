@@ -9,6 +9,7 @@ library(lubridate)
 Window = 6
 
 cmonth <- month(today())
+cmonth <- 5
 
 climate.sum.anomaly <- readRDS("./outputs/climate.sum.anomaly.select.RDS") %>%
   group_by(variable) %>%

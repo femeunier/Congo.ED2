@@ -210,6 +210,25 @@ climate.sum.anomaly.select.group %>%
   summarise(m = mean(value,na.rm = TRUE))
 
 
+climate.sum.anomaly.select.group %>%
+  filter(groups == "2023") %>%
+  filter(variable == "tmp") %>%
+  pull(value) %>% mean(na.rm = TRUE)
+
+climate.sum.anomaly.select %>%
+  filter(year < 2023) %>%
+  filter(variable == "tmp") %>%
+  filter(month %in% c(7:12,1:4)) %>%
+  pull(value) %>% mean()
+
+climate.sum.anomaly.select.group %>%
+  filter((year == 2024 & month %in% c(1:4)) |
+         (year == 2023 & month %in% c(7:12))) %>%
+  filter(variable == "pre") %>%
+  pull(anomaly) %>% mean(na.rm = TRUE)
+
+
+
 # climate.sum.anomaly %>%
 #   filter(variable %in% c("pre","tmp")) %>%
 #   group_by(variable) %>%

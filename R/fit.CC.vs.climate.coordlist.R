@@ -58,7 +58,7 @@ fit.CC.vs.climate.coordlist <- function(model = "CABLE-POP",
     mutate(model.lon.lat = paste0(model,".",lon,".",lat))
 
   # CO2
-  dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/global_co2_ann_1700_2022.txt",
+  dataC02 <- read.table("/data/gent/vo/000/gvo00074/felicien/R/data/global_co2_ann_1700_2024.txt",
                         stringsAsFactors = FALSE) %>%
     rename(year = V1,
            CO2 = V2)

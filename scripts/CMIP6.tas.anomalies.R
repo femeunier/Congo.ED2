@@ -5,11 +5,12 @@ library(dplyr)
 library(tidyr)
 library(zoo)
 
-system2("rsync",
-        paste("-avz","hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/df.monthly.tas*",
-              "./outputs/"))
+# system2("rsync",
+#         paste("-avz","hpc:/data/gent/vo/000/gvo00074/felicien/R/outputs/df.monthly.tas.*",
+#               "./outputs/"))
 
-l.files <- list.files("./outputs",pattern = "df.monthly.tas*")
+l.files <- list.files("./outputs",pattern = "df.monthly.tas.*")
+l.files <- l.files[!grepl("pantropical|basin",l.files)]
 OP.files.no.ext <- tools::file_path_sans_ext((l.files))
 all.attributes <- strsplit(OP.files.no.ext,split = "\\.")
 
@@ -128,8 +129,11 @@ coord <- readRDS("./outputs/Coord.ILF.ERA5.RDS") %>%
   # filter(model == "ORCHIDEE") %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2)))
 
-climate <- readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
-  filter(year >= 1985)
+climate <- bind_rows(
+  readRDS("./outputs/monthly.climate.pantropical.ERA5.RDS") %>%
+  filter(year >= 1985, year <= 2023),
+  readRDS("/home/femeunier/Documents/data/monthly.climate.global.ERA5.2024.RDS") %>%
+    filter(month <= 5))
 
 climate.select <- climate %>%
   mutate(lon.lat = paste0(round(lon,digits = 2),".",round(lat,digits = 2))) %>%
