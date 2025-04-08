@@ -4,21 +4,20 @@ library(R.utils)
 library(raster)
 library(ggplot2)
 library(dplyr)
-library(maptools)
 library(akima)
 library(RColorBrewer)
 library(pracma)
 library(lubridate)
 
 dir <- "/home/femeunier/Documents/projects/SIF.data/data/"
-dir <- "/home/femeunier/Downloads/"
+# dir <- "/home/femeunier/Downloads/"
 
 biomes <- readRDS("./outputs/biome.CRUJRA.1901.2022.AI.RDS") %>%
   filter(model == unique(model)[14])
 raster <- rasterFromXYZ(biomes %>%
                            dplyr::select(c(lon,lat,MAP)))
 
-years <- 2000:2023
+years <- 2000:2024
 months <- 1:12
 
 SF <- (0.01)        # Scaling factor
@@ -42,8 +41,11 @@ for (iyear in seq(1,length(years))){
 
     gz.name <- paste0(file.name,".gz")
     tmp.f <- file.path(dir,gz.name)
+
+
     f <- paste0('http://data.globalecology.unh.edu/data/GOSIF-GPP_v2/Monthly/Mean/',gz.name)
-    if (!file.exists(tmp.f)) {
+    if (!any(file.exists(c(file.path(dir,file.name),
+                           tmp.f)))) {
 
       test <- tryCatch(download.file(f, tmp.f, mode = 'wb'),
                        error = function(e) NULL)
@@ -59,17 +61,24 @@ for (iyear in seq(1,length(years))){
     }
 
     if (!file.exists(file.path(dir,file.name))){
-      gunzip(tmp.f, remove = FALSE)
+      gunzip(tmp.f, remove = TRUE)
     }
 
 
     craster <- raster(file.path(dir,file.name))
+
+    if(first){
+      craster.ref <- craster
+      first <- FALSE
+    }
+
     craster[craster >= 32766] <- NA_real_       # Water bodies, oceans
 
+    craster <- resample(craster,craster.ref)
     Ndays <- as.numeric(lubridate::days_in_month(as.Date(paste0(year,"/",sprintf("%02d",month),"/01"))))
     craster <- craster*SF/Ndays # gC/day
 
-    dumb <- file.remove(file)
+    dumb <- file.remove(tmp.f)
 
     all.raster.cr <- (crop(craster,e))
     cdf <- as.data.frame(all.raster.cr, xy = TRUE) %>%
@@ -98,11 +107,11 @@ for (iyear in seq(1,length(years))){
 
 # plot(craster)
 # plot(crop(craster,extent(8,42,-12,12)))
-
-data(wrld_simpl)
-mymap <- fortify(wrld_simpl)
-
-cols <- c("white",fliplr(t(rev(brewer.pal(9, 'YlGn')))))
+#
+# data(wrld_simpl)
+# mymap <- fortify(wrld_simpl)
+#
+# cols <- c("white",fliplr(t(rev(brewer.pal(9, 'YlGn')))))
 
 ggplot() +
 
@@ -110,9 +119,9 @@ ggplot() +
               filter(month == month[1],
                      year == year[1]),
             aes(x = lon, y = lat, fill = value), alpha = 1) +
-  geom_map(data = mymap,
-           map = mymap,
-           aes(x = long, y = lat, map_id = id), fill = NA, color = "black") +
+  # geom_map(data = mymap,
+  #          map = mymap,
+  #          aes(x = long, y = lat, map_id = id), fill = NA, color = "black") +
   coord_sf(xlim = c(-90, -30),
            ylim = c(-25, 12)) +
   # geom_point(aes(x = (e@xmin+e@xmax)/2,
@@ -134,6 +143,6 @@ ggplot() +
 
 # -11.75 -72.25 2018    10 NaN
 saveRDS(all.df,
-        "./data/GPP/monthly/SIF.GPP.2023.RDS")
+        "./data/GPP/monthly/SIF.GPP.2024.RDS")
 
 

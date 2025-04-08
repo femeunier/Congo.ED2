@@ -99,8 +99,7 @@ convert.ERA5.decade <- function(decade,
         mutate(month = month(time),
                day = day(time)) %>%
         mutate(t = t2m - 273.15,
-               dewpoint = d2m - 273.15,
-               frac = fdir/ssrd) %>%
+               dewpoint = d2m - 273.15) %>%
         mutate(beta = (112 - (0.1 * t) + dewpoint) / (112 + (0.9 * t)),
                rh =   ((112 - (0.1 * t) + dewpoint) / (112 + (0.9 * t))) ^ 8) %>%
         mutate(sh = PEcAn.data.atmosphere::rh2qair(rh,
@@ -115,7 +114,7 @@ convert.ERA5.decade <- function(decade,
         summarise(tmp = mean(t2m),
                   tmin = mean(tmin),
                   tmax = mean(tmax),
-                  frac = mean(frac),
+                  fdir = mean(fdir),
                   pre = mean(tp)*1000*3,
                   dswrf = mean(ssrd)*6,
                   dlwrf = mean(strd)/(3600),

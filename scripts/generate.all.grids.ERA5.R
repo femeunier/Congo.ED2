@@ -12,7 +12,7 @@ library(stringr)
 library(randomForest)
 library(ggpointdensity)
 
-models <- TrENDY.analyses::get.model.names.TRENDY()
+models <- TrENDY.analyses::get.model.names.TRENDY(version = "v13")
 
 # options(warn = 0)
 

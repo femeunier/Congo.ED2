@@ -12,11 +12,11 @@ library(stringr)
 library(randomForest)
 library(ggpointdensity)
 
-models <- TrENDY.analyses::get.model.names.TRENDY()
+models <- TrENDY.analyses::get.model.names.TRENDY(version = "v13")
 
 # options(warn = 0)
 
-Tropics.sum <- readRDS("./outputs/monthly.climate.pantropical.JRA.RDS")
+Tropics.sum <- readRDS("./outputs/monthly.climate.pantropical.CRUJRA.RDS")
 CN <- colnames(Tropics.sum)
 Var.names <- CN[!(CN %in% c("lat","lon","year","month"))]
 
@@ -25,16 +25,16 @@ all.grids <- data.frame()
 overwrite = TRUE
 for (cmodel in models){
 
-  model.file <- paste0("./outputs/Trendy.",cmodel,".S2.CC.pantropical.v11.RDS")
+  model.file <- paste0("./outputs/Trendy.",cmodel,".S2.CC.pantropical.v13.RDS")
   print(cmodel)
 
   if (!file.exists(model.file)){
-    model.file <- paste0("./outputs/Trendy.",cmodel,".S3.CC.pantropical.v11.RDS")
+    model.file <- paste0("./outputs/Trendy.",cmodel,".S3.CC.pantropical.v13.RDS")
   }
 
   if (!file.exists(model.file)) next()
 
-  OPfile <- paste0("./data/grid.JRA.",cmodel,".RDS")
+  OPfile <- paste0("./data/grid.JRA.",cmodel,".v13.RDS")
 
   if (file.exists(OPfile) & !overwrite){next()}
 
